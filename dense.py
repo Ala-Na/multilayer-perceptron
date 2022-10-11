@@ -148,7 +148,7 @@ class DenseLayer():
 		return self.activation(Z)
 
 	def backward(self, dZ_next: np.ndarray, Z: np.ndarray) -> np.ndarray:
-		dA =
+		dA = # TODO continue there
 
 
 	# TODO modify following
