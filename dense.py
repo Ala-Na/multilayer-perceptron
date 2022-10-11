@@ -2,6 +2,8 @@ import numpy as np
 from typing import Tuple
 import os
 
+### Functions to compute activation in forward propagation
+
 def linear(Z: np.ndarray) -> np.ndarray:
 	''' Compute the linear activation function.
 	Mainly used for output layer in case of classification. '''
@@ -33,26 +35,29 @@ def leaky_relu(Z: np.ndarray) -> np.ndarray:
 	Commonly used for hidden layers. '''
 	return np.maximum(0.01 * Z, Z)
 
-def linear_derivative(weights: np.ndarray) -> np.ndarray:
-	''' Compute the derivative of linear activation function. '''
-	return weights
+### Derivative functions of activations function to perform backward propagation
+## In hidden layer only (non final)
 
 def sigmoid_derivative(Z: np.ndarray) -> np.ndarray:
-	''' Compute the derivative of sigmoid activation function. '''
+	''' Compute the derivative of sigmoid activation function
+	when used as a hidden layer. '''
 	return Z * (1 - Z)
 
 def tanh_derivative(Z: np.ndarray) -> np.ndarray:
-	''' Compute the derivative of tanh activation function. '''
+	''' Compute the derivative of tanh activation function
+	when used as a hidden layer. '''
 	return 1 - (Z**2)
 
 def relu_derivative(Z: np.ndarray) -> np.ndarray:
-	''' Compute the derivative of relu activation function. '''
+	''' Compute the derivative of relu activation function
+	when used as a hidden layer. '''
 	Z[Z <= 0] = 0
 	Z[Z > 0] = 1
 	return Z
 
 def leaky_relu_derivative(Z: np.ndarray) -> np.ndarray:
-	''' Compute the derivative of relu activation function. '''
+	''' Compute the derivative of relu activation function.
+	when used as a hidden layer. '''
 	Z[Z < 0] = 0.01
 	Z[Z >= 0] = 1
 	return Z
@@ -67,16 +72,18 @@ class DenseLayer():
 	supported_initialization = ['random', 'zeros', 'he']
 	supported_regularization = ['l2', None]
 	supported_optimization = ['momentum', 'rmsprop', 'adam', None]
-	supported_activation = ['relu', 'softmax', 'sigmoid', 'tanh', 'leaky_relu', \
-		'linear']
+	supported_activation = ['relu', 'sigmoid', 'tanh', 'leaky_relu']
+	supported_final_activation = ['softmax', 'linear', 'sigmoid']
 
 	def __init__(self, input_shape: int, output_shape: int, \
+			final: bool = False, \
 			initialization: str = 'random', activation: str = 'relu', \
 			alpha: float = 0.001, beta_1: float = 0.9, beta_2: float = 0.99, \
 			epsilon: float = 1e-8, lambda_: float = 1.0, max_iter: int = 10000, \
 			regularization: str = 'l2', optimization: str = None, \
 			early_stopping: bool = False, decay: bool = False, \
 			decay_rate: float = 0.1, decay_interval: int or None = 1000) -> None:
+		assert isinstance(final, bool)
 		assert isinstance(input_shape, int)
 		assert isinstance(output_shape, int)
 		assert isinstance(alpha, float)
@@ -94,7 +101,12 @@ class DenseLayer():
 		assert regularization in self.supported_regularization
 		assert optimization in self.supported_optimization
 		assert initialization in self.supported_initialization
-		assert activation in self.supported_activation
+		if final == False:
+			assert activation in self.supported_activation
+			activation_functions = [relu(), sigmoid(), tanh(), leaky_relu()]
+		else:
+			assert activation in self.supported_final_activation
+			activation_functions = [softmax(), linear(), sigmoid()]
 		self.weights, self.bias = self.parameters_initialization(input_shape, output_shape, initialization)
 		self.alpha = alpha
 		self.original_alpha = alpha
@@ -103,8 +115,6 @@ class DenseLayer():
 		self.max_iter= max_iter
 		self.regularization = regularization
 		self.optimization = optimization
-		activation_functions = [relu(), softmax(), sigmoid(), tanh(), \
-			leaky_relu(), linear()]
 		self.activation = activation_functions[self.supported_activation.index(activation)]
 		self.lambda_ = lambda_ if regularization != None else 0
 		if self.lambda_ < 0:
