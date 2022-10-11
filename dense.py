@@ -15,16 +15,14 @@ class Dense():
 	supported_optimization = ['momentum', 'rmsprop', 'adam', None]
 	supported_activation = ['relu', 'softmax', 'sigmoid', 'tanh', 'leaky_relu', \
 		'linear']
-	activation_functions = [relu(), softmax(), sigmoid(), tanh(),leaky_relu(), \
-		linear()]
 
-	def __init__(self, nb_features: int, initialization: str = 'random', \
+	def __init__(self, input_shape: int, output_shape: int, \
+			initialization: str = 'random', activation: str = 'relu', \
 			alpha: float = 0.001, beta_1: float = 0.9, beta_2: float = 0.99, \
 			epsilon: float = 1e-8, lambda_: float = 1.0, max_iter: int = 10000, \
 			regularization: str = 'l2', optimization: str = None, \
 			early_stopping: bool = False, decay: bool = False, \
-			decay_rate: float = 0.1, decay_interval: int or None = 1000,
-			activation: str = 'relu') -> None:
+			decay_rate: float = 0.1, decay_interval: int or None = 1000) -> None:
 		assert isinstance(nb_features, int)
 		assert isinstance(alpha, float)
 		assert isinstance(beta_1, float) and (beta_1 > 0 and beta_1 <= 1)
@@ -50,7 +48,9 @@ class Dense():
 		self.max_iter= max_iter
 		self.regularization = regularization
 		self.optimization = optimization
-		self.activation = self.activation_functions[self.supported_activation.index(activation)]
+		activation_functions = [self.relu(), self.softmax(), self.sigmoid(), \
+			self.tanh(), self.leaky_relu(), self.linear()]
+		self.activation = activation_functions[self.supported_activation.index(activation)]
 		self.lambda_ = lambda_ if regularization != None else 0
 		if self.lambda_ < 0:
 			raise ValueError("Lambda must be positive")
@@ -91,8 +91,6 @@ class Dense():
 		X = np.insert(x, 0, 1.0, axis=1)
 		to_activate = X @ self.theta
 		return self.activativation(to_activate)
-		# TODO modify following
-		#return 1 / (1 + np.exp(-X @ self.theta))
 
 	def cost(self, y: np.ndarray, y_hat: np.ndarray) \
 			-> np.ndarray or None:
@@ -312,8 +310,13 @@ class Dense():
 		assert np.issubdtype(theta.dtype, np.number) and theta.shape == self.theta.shape
 		self.theta = theta
 
+	def linear(self, linear: np.ndarray) -> np.ndarray:
+		''' Compute the linear activation function.
+		Mainly used for output layer in case of classification. '''
+		return linear
+
 	def sigmoid(self, linear: np.ndarray) -> np.ndarray:
-		''' Compute the sigmoid                                                                                     activation function.
+		''' Compute the sigmoid activation function.
 		Mainly used for output layer in case of classification. '''
 		return 1 / (1 + np.exp(-linear))
 
