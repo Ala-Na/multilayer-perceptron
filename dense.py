@@ -2,11 +2,65 @@ import numpy as np
 from typing import Tuple
 import os
 
+def linear(Z: np.ndarray) -> np.ndarray:
+	''' Compute the linear activation function.
+	Mainly used for output layer in case of classification. '''
+	return Z
+
+def sigmoid(Z: np.ndarray) -> np.ndarray:
+	''' Compute the sigmoid activation function.
+	Mainly used for output layer in case of classification. '''
+	return 1 / (1 + np.exp(-Z))
+
+def relu(Z: np.ndarray) -> np.ndarray:
+	''' Compute the relu activation function.
+	Commonly used for hidden layers. '''
+	return np.maximum(0, Z)
+
+def softmax(Z: np.ndarray) -> np.ndarray:
+	''' Compute the softmax activation function.
+	Commonly used for output layer. '''
+	return np.exp(Z) / np.sum(np.exp(Z))
+
+def tanh(Z: np.ndarray) -> np.ndarray:
+	''' Compute the tanh activation function.
+	Commonly used for hidden layers. '''
+	return (np.exp(Z) - np.exp(-Z)) \
+		/ (np.exp(Z) + np.exp(-Z))
+
+def leaky_relu(Z: np.ndarray) -> np.ndarray:
+	''' Compute the leaky relu activation function.
+	Commonly used for hidden layers. '''
+	return np.maximum(0.01 * Z, Z)
+
+def linear_derivative(weights: np.ndarray) -> np.ndarray:
+	''' Compute the derivative of linear activation function. '''
+	return weights
+
+def sigmoid_derivative(Z: np.ndarray) -> np.ndarray:
+	''' Compute the derivative of sigmoid activation function. '''
+	return Z * (1 - Z)
+
+def tanh_derivative(Z: np.ndarray) -> np.ndarray:
+	''' Compute the derivative of tanh activation function. '''
+	return 1 - (Z**2)
+
+def relu_derivative(Z: np.ndarray) -> np.ndarray:
+	''' Compute the derivative of relu activation function. '''
+	Z[Z <= 0] = 0
+	Z[Z > 0] = 1
+	return Z
+
+def leaky_relu_derivative(Z: np.ndarray) -> np.ndarray:
+	''' Compute the derivative of relu activation function. '''
+	Z[Z < 0] = 0.01
+	Z[Z >= 0] = 1
+	return Z
 
 # TODO modify because was previously logistic regression class
-# TODO must take input/output
+# TODO we need to create a model class which will take dense layer model and train them
 # TODO check initialization values
-class Dense():
+class DenseLayer():
 	''' A dense model'''
 
 	# Supported initialization, regularization and optimization algorithm
@@ -23,7 +77,8 @@ class Dense():
 			regularization: str = 'l2', optimization: str = None, \
 			early_stopping: bool = False, decay: bool = False, \
 			decay_rate: float = 0.1, decay_interval: int or None = 1000) -> None:
-		assert isinstance(nb_features, int)
+		assert isinstance(input_shape, int)
+		assert isinstance(output_shape, int)
 		assert isinstance(alpha, float)
 		assert isinstance(beta_1, float) and (beta_1 > 0 and beta_1 <= 1)
 		assert isinstance(beta_2, float) and (beta_2 > 0 and beta_2 <= 1)
@@ -40,7 +95,7 @@ class Dense():
 		assert optimization in self.supported_optimization
 		assert initialization in self.supported_initialization
 		assert activation in self.supported_activation
-		self.theta = self.parameters_initialization(nb_features, initialization)
+		self.weights, self.bias = self.parameters_initialization(input_shape, output_shape, initialization)
 		self.alpha = alpha
 		self.original_alpha = alpha
 		self.beta_1 = beta_1
@@ -48,8 +103,8 @@ class Dense():
 		self.max_iter= max_iter
 		self.regularization = regularization
 		self.optimization = optimization
-		activation_functions = [self.relu(), self.softmax(), self.sigmoid(), \
-			self.tanh(), self.leaky_relu(), self.linear()]
+		activation_functions = [relu(), softmax(), sigmoid(), tanh(), \
+			leaky_relu(), linear()]
 		self.activation = activation_functions[self.supported_activation.index(activation)]
 		self.lambda_ = lambda_ if regularization != None else 0
 		if self.lambda_ < 0:
@@ -62,56 +117,31 @@ class Dense():
 		self.initialize_step_size()
 		self.initialize_velocity()
 
-	def parameters_initialization(self, shape: int, init: str) :
-		'''Initialize parameters (theta) of model'''
+	def parameters_initialization(self, input_shape: int, output_shape: int, \
+		init: str) -> Tuple[np.ndarray, np.ndarray]:
+		'''Initialize parameters (weights and bias) of model'''
 		# random initialization with number between 0 and 1
 		if init == 'random':
-			weights = np.random.randn(shape, 1)
+			weights = np.random.randn(output_shape, input_shape) * 0.01
 		# init with zeros
 		elif init == 'zeros':
-			weights = np.zeros((shape, 1))
+			weights = np.zeros((output_shape, input_shape))
 		# init with He initialization, would make more sense in a NN as 1 would be shape of l - 1
 		elif init == 'he':
-			weights = np.random.randn(shape, 1) * np.sqrt(2 / 1) # would make more sense in a NN
-		bias = np.zeros((1, 1))
-		return np.concatenate([weights, bias])
+			weights = np.random.randn(output_shape, input_shape) * np.sqrt(2 / input_shape)
+		bias = np.zeros((output_shape, 1))
+		return weights, bias
 
-	def l2(self) -> np.ndarray:
-		''' Perform L2 regularization '''
-		theta_cp = self.theta.copy()
-		theta_cp[0][0] = 0
-		return np.sum(theta_cp ** 2)
+	def forward(self, A_prev: np.ndarray) -> np.ndarray:
+		''' Predict activation result according to A_prev (input) and parameters. '''
+		Z = np.dot(self.weights, A_prev) + self.bias
+		return self.activation(Z)
 
-	def predict(self, x: np.ndarray) -> np.ndarray:
-		''' Predict an output according to x and theta parameters'''
-		if not isinstance(x, np.ndarray) \
-				or not np.issubdtype(x.dtype, np.number) or x.ndim != 2 \
-				or x.shape[0] == 0 or x.shape[1] != self.theta.shape[0] - 1:
-			return None
-		X = np.insert(x, 0, 1.0, axis=1)
-		to_activate = X @ self.theta
-		return self.activativation(to_activate)
+	def backward(self, dZ_next: np.ndarray, Z: np.ndarray) -> np.ndarray:
+		dA =
 
-	def cost(self, y: np.ndarray, y_hat: np.ndarray) \
-			-> np.ndarray or None:
-		''' Calculus of loss (difference) on all predicted and expected outputs'''
-		eps=1e-15
-		if not isinstance(y, np.ndarray) \
-				or not np.issubdtype(y.dtype, np.number) \
-				or y.ndim != 2 or y.shape[0] == 0 or y.shape[1] != 1:
-			return None
-		if not isinstance(y_hat, np.ndarray) \
-				or not np.issubdtype(y_hat.dtype, np.number) \
-				or y_hat.ndim != 2 or y_hat.shape != y.shape:
-			return None
-		if not isinstance(eps, float):
-			return None
-		one_vec = np.ones((1, y.shape[1]))
-		m = y.shape[0]
-		return ((-1 / m) * (y.T.dot(np.log(y_hat + eps)) \
-			+ (one_vec - y).T.dot(np.log(one_vec - y_hat + eps))) \
-			+ ((self.lambda_ / (2 * m)) * self.l2(self.theta))).item()
 
+	# TODO modify following
 	def cost_derivative(self, x: np.ndarray, y: np.ndarray) \
 			-> np.ndarray or None:
 		''' Derivative calculus of cost, necessary to perform gradient descent'''
@@ -218,30 +248,6 @@ class Dense():
 		two thetas iteration. MSE on validation set is only checked each 100
 		epochs to avoid slowing down the training.
 		'''
-		# Check of x and y training data received
-		if not isinstance(x, np.ndarray) \
-				or not np.issubdtype(x.dtype, np.number) \
-				or x.ndim != 2 or x.size == 0 \
-				or x.shape[1] != self.theta.shape[0] - 1:
-			return None
-		if not isinstance(y, np.ndarray) \
-				or not np.issubdtype(y.dtype, np.number) \
-				or y.ndim != 2 or y.shape != (x.shape[0], 1):
-			return None
-
-		# Check of x_val and y_val received if calculation of MSE
-		if x_val is not None and (not isinstance(x_val, np.ndarray) \
-				or not np.issubdtype(x_val.dtype, np.number) \
-				or x_val.ndim != 2 or x_val.size == 0 \
-				or x_val.shape[1] != self.theta.shape[0] - 1):
-			return None
-		if y_val is not None and (not isinstance(y_val, np.ndarray) \
-				or not np.issubdtype(y_val.dtype, np.number) \
-				or y_val.ndim != 2 or y_val.shape != (x_val.shape[0], 1)):
-			return None
-		if y_val is not None and x_val is not None:
-			mse = []
-			previous_theta = None
 
 		t = 0 # initialize for adam
 		if batch_size == None or batch_size <= 0 : # if batch_size None or
@@ -310,33 +316,9 @@ class Dense():
 		assert np.issubdtype(theta.dtype, np.number) and theta.shape == self.theta.shape
 		self.theta = theta
 
-	def linear(self, linear: np.ndarray) -> np.ndarray:
-		''' Compute the linear activation function.
-		Mainly used for output layer in case of classification. '''
-		return linear
 
-	def sigmoid(self, linear: np.ndarray) -> np.ndarray:
-		''' Compute the sigmoid activation function.
-		Mainly used for output layer in case of classification. '''
-		return 1 / (1 + np.exp(-linear))
-
-	def relu(self, linear: np.ndarray) -> np.ndarray:
-		''' Compute the relu activation function.
-		Commonly used for hidden layers. '''
-		return np.maximum(0, linear)
-
-	def softmax(self, linear: np.ndarray) -> np.ndarray:
-		''' Compute the softmax activation function.
-		Commonly used for output layer. '''
-		return np.exp(linear) / np.sum(np.exp(linear))
-
-	def tanh(self, linear: np.ndarray) -> np.ndarray:
-		''' Compute the tanh activation function.
-		Commonly used for hidden layers. '''
-		return (np.exp(linear) - np.exp(-linear)) \
-			/ (np.exp(linear) + np.exp(-linear))
-
-	def leaky_relu(self, linear: np.ndarray) -> np.ndarray:
-		''' Compute the leaky relu activation function.
-		Commonly used for hidden layers. '''
-		return np.maximum(0.01 * linear, linear)
+	def l2(self) -> np.ndarray:
+		''' Perform L2 regularization '''
+		theta_cp = self.theta.copy()
+		theta_cp[0][0] = 0
+		return np.sum(theta_cp ** 2)
