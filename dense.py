@@ -2,6 +2,10 @@ import numpy as np
 from typing import Tuple
 import os
 
+
+# TODO modify because was previously logistic regression class
+# TODO must take input/output
+# TODO check initialization values
 class Dense():
 	''' A dense model'''
 
@@ -85,7 +89,10 @@ class Dense():
 				or x.shape[0] == 0 or x.shape[1] != self.theta.shape[0] - 1:
 			return None
 		X = np.insert(x, 0, 1.0, axis=1)
-		return 1 / (1 + np.exp(-X @ self.theta))
+		to_activate = X @ self.theta
+		return self.activativation(to_activate)
+		# TODO modify following
+		#return 1 / (1 + np.exp(-X @ self.theta))
 
 	def cost(self, y: np.ndarray, y_hat: np.ndarray) \
 			-> np.ndarray or None:
@@ -305,5 +312,28 @@ class Dense():
 		assert np.issubdtype(theta.dtype, np.number) and theta.shape == self.theta.shape
 		self.theta = theta
 
-	def sigmoid(self, x:np.ndarray):
-		
+	def sigmoid(self, linear: np.ndarray) -> np.ndarray:
+		''' Compute the sigmoid                                                                                     activation function.
+		Mainly used for output layer in case of classification. '''
+		return 1 / (1 + np.exp(-linear))
+
+	def relu(self, linear: np.ndarray) -> np.ndarray:
+		''' Compute the relu activation function.
+		Commonly used for hidden layers. '''
+		return np.maximum(0, linear)
+
+	def softmax(self, linear: np.ndarray) -> np.ndarray:
+		''' Compute the softmax activation function.
+		Commonly used for output layer. '''
+		return np.exp(linear) / np.sum(np.exp(linear))
+
+	def tanh(self, linear: np.ndarray) -> np.ndarray:
+		''' Compute the tanh activation function.
+		Commonly used for hidden layers. '''
+		return (np.exp(linear) - np.exp(-linear)) \
+			/ (np.exp(linear) + np.exp(-linear))
+
+	def leaky_relu(self, linear: np.ndarray) -> np.ndarray:
+		''' Compute the leaky relu activation function.
+		Commonly used for hidden layers. '''
+		return np.maximum(0.01 * linear, linear)
