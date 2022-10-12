@@ -167,9 +167,7 @@ class DenseLayer():
 			Z: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 		assert self.derivative is not None
 		m = A_prev.shape[1]
-		print(dA.shape, Z.shape)
 		dZ = dA * self.derivative(Z)
-		print(dZ.shape,)
 		dW = 1/m * np.dot(dZ, A_prev.T)
 		db = 1/m * np.sum(dZ, axis=1, keepdims=True)
 		dA_prev = np.dot(self.weights.T, dZ)

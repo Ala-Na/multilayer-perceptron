@@ -60,17 +60,11 @@ class SimpleNeuralNetwork():
 		self.infos["dA" + str(L - 1)] = dA_prev
 		self.infos["dW" + str(L)] = dW
 		self.infos["db" + str(L)] = db
-		print("dW", str(L), dW.shape)
-		print("db", str(L), db.shape)
-		print("dA", str(L - 1), dA_prev.shape)
 		for l in range(L - 1, 0, -1):
-			A = self.infos["A" + str(l)]
+			A_prev = self.infos["A" + str(l - 1)]
 			Z = self.infos["Z" + str(l)]
 			dA_prev, dW, db = self.layers[l - 1].hidden_backward(dA_prev, \
-				A, Z)
-			print("dW", str(l), dW.shape)
-			print("db", str(l), db.shape)
-			print("dA", str(l - 1), dA_prev.shape)
+				A_prev, Z)
 			self.infos["dA" + str(l - 1)] = dA_prev
 			self.infos["dW" + str(l)] = dW
 			self.infos["db" + str(l)] = db
@@ -80,3 +74,10 @@ class SimpleNeuralNetwork():
 			dW = self.infos["dW" + str(i + 1)]
 			db = self.infos["db" + str(i + 1)]
 			layer.update_parameters(dW, db)
+
+	def fit(self, nb_iterations: int = 10000) -> None:
+		for i in range(nb_iterations):
+			self.forward_propagation()
+			print(self.cross_entropy_loss())
+			self.backward_propagation()
+			self.update()

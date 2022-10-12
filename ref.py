@@ -61,9 +61,6 @@ class ANN():
 
 		derivatives["dW" + str(self.L)] = dW
 		derivatives["db" + str(self.L)] = db
-		print("dW", str(self.L), dW.shape)
-		print("db", str(self.L), db.shape)
-		print("dA", str(self.L - 1), dAPrev.shape)
 
 		for l in range(self.L - 1, 0, -1):
 			dZ = dAPrev * self.sigmoid_derivative(store["Z" + str(l)])
@@ -71,9 +68,6 @@ class ANN():
 			db = 1. / self.n * np.sum(dZ, axis=1, keepdims=True)
 			if l > 1:
 				dAPrev = store["W" + str(l)].T.dot(dZ)
-			print("dW", str(l), dW.shape)
-			print("db", str(l), db.shape)
-			print("dA", str(l - 1), dAPrev.shape)
 
 			derivatives["dW" + str(l)] = dW
 			derivatives["db" + str(l)] = db
@@ -100,8 +94,8 @@ class ANN():
 					"db" + str(l)]
 
 
-			if loop % 100 == 0:
-				print("Cost: ", cost, "Train Accuracy:", self.predict(X, Y))
+			# if loop % 100 == 0:
+			print("Cost: ", cost, "Train Accuracy:", self.predict(X, Y))
 
 			if loop % 10 == 0:
 				self.costs.append(cost)
@@ -130,5 +124,5 @@ if __name__ == '__main__':
 	layers_dims = [6, 3]
 
 	ann = ANN(layers_dims)
-	ann.fit(train_x, train_y, learning_rate=0.1, n_iterations=1)
+	ann.fit(train_x, train_y, learning_rate=0.1, n_iterations=3)
 	print("Train Accuracy:", ann.predict(train_x, train_y))
