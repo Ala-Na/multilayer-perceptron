@@ -69,7 +69,7 @@ class DenseLayer():
 	''' A dense model'''
 
 	# Supported initialization, regularization and optimization algorithm
-	supported_initialization = ['random', 'zeros', 'he']
+	supported_initialization = ['random', 'zeros', 'he', 'other'] #TODO delete other
 	supported_regularization = ['l2', None]
 	supported_optimization = ['momentum', 'rmsprop', 'adam', None]
 	supported_activation = ['relu', 'sigmoid', 'tanh', 'leaky_relu']
@@ -146,7 +146,11 @@ class DenseLayer():
 		# init with He initialization, would make more sense in a NN as 1 would be shape of l - 1
 		elif init == 'he':
 			weights = np.random.randn(output_shape, input_shape) * np.sqrt(2 / input_shape)
+		elif init == 'other': # TODO delete
+			print(output_shape, input_shape)
+			weights = np.random.randn(output_shape, input_shape) / np.sqrt(input_shape)
 		bias = np.zeros((output_shape, 1))
+		print(weights, bias)
 		return weights, bias
 
 	def forward(self, A_prev: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:

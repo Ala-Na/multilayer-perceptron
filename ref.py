@@ -16,12 +16,12 @@ class ANN():
 		return expZ / expZ.sum(axis=0, keepdims=True)
 
 	def initialize_parameters(self):
-		np.random.seed(1)
-
 		for l in range(1, len(self.layers_size)):
+			print(self.layers_size[l], self.layers_size[l - 1])
 			self.parameters["W" + str(l)] = np.random.randn(self.layers_size[l], self.layers_size[l - 1]) / np.sqrt(
 				self.layers_size[l - 1])
 			self.parameters["b" + str(l)] = np.zeros((self.layers_size[l], 1))
+			print(self.parameters["W" + str(l)], self.parameters["b" + str(l)])
 
 	def forward(self, X):
 		store = {}
@@ -75,8 +75,6 @@ class ANN():
 		return derivatives
 
 	def fit(self, X, Y, learning_rate=0.01, n_iterations=2500):
-		np.random.seed(1)
-
 		self.n = X.shape[0]
 
 		self.layers_size.insert(0, X.shape[1])
@@ -120,6 +118,7 @@ def one_hot_class_encoder(to_encode: np.ndarray, nb_classes: int) -> np.ndarray:
 	return encoded
 
 if __name__ == '__main__':
+	np.random.seed(42)
 	train_y = one_hot_class_encoder(train_y, 3)
 	layers_dims = [6, 3]
 
