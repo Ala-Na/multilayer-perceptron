@@ -16,7 +16,7 @@ def one_hot_class_encoder(to_encode: np.ndarray, nb_classes: int) -> np.ndarray:
 if __name__ == "__main__":
 	np.random.seed(42)
 	y_train = one_hot_class_encoder(y_train, 3)
-	dense1 = DenseLayer(5, 6, activation='sigmoid', initialization='other')
-	dense2 = DenseLayer(6, 3, final=True, activation='softmax', initialization='other')
+	dense1 = DenseLayer(5, 6, alpha=0.1, activation='sigmoid', initialization='other')
+	dense2 = DenseLayer(6, 3, alpha=0.1, final=True, activation='softmax', initialization='other')
 	model = SimpleNeuralNetwork(x_train, y_train, [dense1, dense2])
 	model.fit(3)
