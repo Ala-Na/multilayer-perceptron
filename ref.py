@@ -17,11 +17,9 @@ class ANN():
 
 	def initialize_parameters(self):
 		for l in range(1, len(self.layers_size)):
-			print(self.layers_size[l], self.layers_size[l - 1])
 			self.parameters["W" + str(l)] = np.random.randn(self.layers_size[l], self.layers_size[l - 1]) / np.sqrt(
 				self.layers_size[l - 1])
 			self.parameters["b" + str(l)] = np.zeros((self.layers_size[l], 1))
-			print(self.parameters["W" + str(l)], self.parameters["b" + str(l)])
 
 	def forward(self, X):
 		store = {}
