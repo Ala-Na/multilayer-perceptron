@@ -2,6 +2,10 @@ from typing import Tuple
 from utils.dense_layer import DenseLayer
 import numpy as np
 
+# TODO early_stopping
+# TODO add more metrics
+# TODO check metrics history
+
 class SimpleNeuralNetwork():
 	''' A simple Neural Network model. '''
 

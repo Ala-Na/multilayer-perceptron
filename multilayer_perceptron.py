@@ -2,6 +2,9 @@ from utils.dense_layer import DenseLayer
 from utils.neural_network import SimpleNeuralNetwork
 import numpy as np
 
+# TODO import true DB
+# TODO display multiple learning curve of differents models
+
 x_train = np.asarray([[0.06666667,0.76862745,0.32156863,0.00392157,0.03529412], [0.06666667,0.76862745,0.32156863,0.00392157,0.03529412],[0.12156863,0.75294118,0.27843137,0.08627451,0.03529412],[0.21960784,0.74509804,0.26666667,0.00784314,0.01960784]])
 y_train = np.asarray([0, 0, 1, 1])
 x_val = np.asarray([[0.06666667,0.76862745,0.32156863,0.00392157,0.03529413]])
