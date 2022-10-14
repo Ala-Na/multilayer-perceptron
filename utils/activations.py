@@ -48,6 +48,7 @@ def tanh_derivative(Z: np.ndarray) -> np.ndarray:
 def relu_derivative(Z: np.ndarray) -> np.ndarray:
 	''' Compute the derivative of relu activation function
 	when used as a hidden layer. '''
+	Z = Z.copy()
 	Z[Z <= 0] = 0
 	Z[Z > 0] = 1
 	return Z
@@ -55,6 +56,7 @@ def relu_derivative(Z: np.ndarray) -> np.ndarray:
 def leaky_relu_derivative(Z: np.ndarray) -> np.ndarray:
 	''' Compute the derivative of relu activation function.
 	when used as a hidden layer. '''
+	Z = Z.copy()
 	Z[Z < 0] = 0.01
 	Z[Z >= 0] = 1
 	return Z
