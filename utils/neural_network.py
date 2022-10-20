@@ -6,6 +6,7 @@ from utils.metrics import *
 # TODO early_stopping
 # TODO add more metrics
 # TODO check metrics history
+# TODO correct loss
 
 class SimpleNeuralNetwork():
 	''' A simple Neural Network model. '''
@@ -157,17 +158,21 @@ class SimpleNeuralNetwork():
 		assert self.layers[L - 1].activation_name == 'sigmoid' \
 			or self.layers[L - 1].activation_name == 'softmax'
 		A_last = self.infos["A" + str(L)] # last activation value (= prediction)
+		Y_pred = np.argmax(A_last, axis=0).T
+		Y = np.argmax(self.Y, axis=1)
 		m = self.Y.shape[0]
-		cost = -1/m * np.sum(self.Y * np.log(A_last.T + eps) \
-			+ (1 - self.Y) * np.log(1 - A_last.T + eps))
+		cost = -1/m * np.sum(Y * np.log(Y_pred + eps) \
+			+ (1 - Y) * np.log(1 - Y_pred + eps))
 		if self.lambda_ != 0:
 			cost += self.regularization_cost()
 		cost_val = None
 		if isinstance(self.X_val, np.ndarray) and isinstance(self.Y_val, np.ndarray):
 			A_last_val = self.forward_propagation(val=True)
+			Y_pred_val = np.argmax(A_last_val, axis=0).T
+			Y_val = np.argmax(self.Y_val, axis=1)
 			m_val = self.Y_val.shape[0]
-			cost_val = -1/m_val * np.sum(self.Y_val * np.log(A_last_val.T + eps) \
-				+ (1 - self.Y_val) * np.log(1 - A_last_val.T + eps))
+			cost_val = -1/m_val * np.sum(Y_val * np.log(Y_pred_val + eps) \
+				+ (1 - Y_val) * np.log(1 - Y_pred_val + eps))
 			if self.lambda_ != 0:
 				cost_val += self.regularization_cost()
 		return np.squeeze(cost), np.squeeze(cost_val)

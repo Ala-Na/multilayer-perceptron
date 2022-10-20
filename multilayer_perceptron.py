@@ -32,7 +32,7 @@ if __name__ == "__main__":
 	dense3 = DenseLayer(128, 64, activation='relu', initialization='he')
 	dense4 = DenseLayer(64, 32, activation='relu', initialization='he')
 	dense5 = DenseLayer(32, 2, final=True, activation='softmax', initialization='he')
-	model = SimpleNeuralNetwork([dense1, dense2, dense3, dense4, dense5], x_train, y_train, x_val, y_val, optimization='adam', name="First try", alpha=0.00001)
-	losses, val_losses = model.fit(1000)
+	model = SimpleNeuralNetwork([dense1, dense2, dense3, dense4, dense5], x_train, y_train, x_val, y_val, optimization=None, name="First try", alpha=0.0001)
+	losses, val_losses = model.fit(5000)
 
 
