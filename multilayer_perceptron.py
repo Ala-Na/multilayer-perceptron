@@ -1,42 +1,38 @@
-from utils.dense_layer import DenseLayer
-from utils.neural_network import SimpleNeuralNetwork
 import numpy as np
-
-# TODO import true DB
-# TODO display multiple learning curve of differents models
-
-x_train = np.asarray([[0.06666667,0.76862745,0.32156863,0.00392157,0.03529412], [0.06666667,0.76862745,0.32156863,0.00392157,0.03529412],[0.12156863,0.75294118,0.27843137,0.08627451,0.03529412],[0.21960784,0.74509804,0.26666667,0.00784314,0.01960784]])
-y_train = np.asarray([0, 0, 1, 1])
-x_val = np.asarray([[0.06666667,0.76862745,0.32156863,0.00392157,0.03529413]])
-y_val = np.asarray([0])
-
-def one_hot_class_encoder(to_encode: np.ndarray, nb_classes: int) -> np.ndarray:
-	''' Encode an array of classes from 0 to nb_classes into a one hot
-	matrix. '''
-	assert np.min(to_encode) >= 0 and np.max(to_encode) < nb_classes
-	encoded = np.zeros((to_encode.shape[0], nb_classes))
-	encoded[np.arange(to_encode.shape[0]), to_encode] = 1.0
-	return encoded
+import pandas as pd
+from utils.data_manipulator import *
+from utils.dense_layer import *
+from utils.neural_network import *
 
 if __name__ == "__main__":
-	y_train = one_hot_class_encoder(y_train, 2)
-	y_val = one_hot_class_encoder(y_val, 2)
-	dense1 = DenseLayer(5, 6, activation='relu', initialization='he')
-	dense2 = DenseLayer(6, 2, final=True, activation='softmax', initialization='he')
-	model = SimpleNeuralNetwork([dense1, dense2], x_train, y_train, x_val, y_val, optimization=None, name="No opti")
-	losses, val_losses = model.fit(3)
+	# First, retrieve labels nd data from .csv file
+	df = pd.read_csv("data.csv", header=None, index_col=0)
+	labels = df.iloc[:, 0]
+	datas = df.iloc[:, 1:]
+	if df.isnull().values.any():
+		print("\033[91mNaN values in dataset : File corrupted\033[0m")
+		exit(1)
 
-	dense1 = DenseLayer(5, 6, activation='relu', initialization='he')
-	dense2 = DenseLayer(6, 2, final=True, activation='softmax', initialization='he')
-	model = SimpleNeuralNetwork([dense1, dense2], x_train, y_train, x_val, y_val, optimization='momentum', name="Momentum")
-	losses, val_losses = model.fit(3)
+	# Transform it in numpy array and replace M and B by numbers
+	labels = labels.to_numpy(dtype=np.dtype(str))
+	datas = datas.to_numpy(dtype=np.dtype(float))
+	labels_nbr = np.select([labels =='B', labels == 'M'], [0 , 1], labels).astype(int)
 
-	dense1 = DenseLayer(5, 6, activation='relu', initialization='he')
-	dense2 = DenseLayer(6, 2, final=True, activation='softmax', initialization='he')
-	model = SimpleNeuralNetwork([dense1, dense2], x_train, y_train, x_val, y_val, optimization='rmsprop', name="RMSprop")
-	losses, val_losses = model.fit(3)
+	# Encode labels into one-hot vectors
+	one_hot_labels = one_hot_class_encoder(labels_nbr, 2)
 
-	dense1 = DenseLayer(5, 6, activation='relu', initialization='he')
-	dense2 = DenseLayer(6, 2, final=True, activation='softmax', initialization='he')
-	model = SimpleNeuralNetwork([dense1, dense2], x_train, y_train, x_val, y_val, optimization='adam', name="Adam")
-	losses, val_losses = model.fit(3)
+	# Cut into training/validation sets and scale x
+	x_train, x_val, y_train, y_val = subsets_creator(datas, one_hot_labels, 0.8)
+	x_train, fqrt, tqrt = scaler(x_train, 'robust')
+	x_val, _, _ = scaler(x_val, 'robust', fqrt, tqrt)
+
+	# Create NN
+	dense1 = DenseLayer(30, 256, activation='relu', initialization='he')
+	dense2 = DenseLayer(256, 128, activation='relu', initialization='he')
+	dense3 = DenseLayer(128, 64, activation='relu', initialization='he')
+	dense4 = DenseLayer(64, 32, activation='relu', initialization='he')
+	dense5 = DenseLayer(32, 2, final=True, activation='softmax', initialization='he')
+	model = SimpleNeuralNetwork([dense1, dense2, dense3, dense4, dense5], x_train, y_train, x_val, y_val, optimization='adam', name="First try", alpha=0.00001)
+	losses, val_losses = model.fit(1000)
+
+

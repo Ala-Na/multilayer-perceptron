@@ -1,6 +1,7 @@
 from typing import Tuple
 from utils.dense_layer import DenseLayer
 import numpy as np
+from utils.metrics import *
 
 # TODO early_stopping
 # TODO add more metrics
@@ -15,7 +16,7 @@ class SimpleNeuralNetwork():
 
 	def __init__(self, layers: list, X: np.ndarray, Y: np.ndarray, \
 		X_val: np.ndarray | None = None, Y_val: np.ndarray | None = None, \
-		alpha: float = 0.001, loss: str = 'cross_entropy', \
+		alpha: float = 0.001, loss: str = 'binary_cross_entropy', \
 		regularization: str = None, lambda_: float = 1.0, \
 		optimization: str | None = None, beta_1: float = 0.9, \
 		beta_2: float = 0.99, epsilon: float = 1e-8, \
@@ -125,6 +126,7 @@ class SimpleNeuralNetwork():
 	def forward_propagation(self, val: bool = False) -> np.ndarray:
 		''' Perform the forward propgation in model neural network. '''
 		if val == False:
+			self.infos.clear()
 			layers_activations = [self.X.T]
 			self.infos["A0"] = self.X.T
 		else:
@@ -217,15 +219,23 @@ class SimpleNeuralNetwork():
 	def fit(self, nb_iterations: int = 10000) -> None:
 		''' Perform forward and backward propagation on a given number of epochs. '''
 		assert nb_iterations > 0
+		metrics = Metrics()
+		L = len(self.layers)
 		print("{} training:".format(self.name))
 		for i in range(nb_iterations):
 			self.forward_propagation()
+			metrics.set_values(np.argmax(self.Y.T, axis=0), np.argmax(self.infos["A" + str(L)], axis=0))
 			train_loss, val_loss = self.loss()
 			self.losses.append(train_loss)
-			print("epoch {}/{} - loss: {}".format(i + 1, nb_iterations, self.losses[i]), end='')
+			print("epoch {}/{} - loss: {:.3f}".format(i + 1, nb_iterations, self.losses[i]), end='')
 			if val_loss != None:
 				self.val_losses.append(val_loss)
-				print(" - val_loss: {}".format(self.val_losses[i]), end='')
+				print(" - val_loss: {:.3f}".format(self.val_losses[i]), end='')
+			print(" - acc: {:3.2f}".format(metrics.accuracy() * 100), end='')
+			if val_loss != None:
+				A_last_val = self.forward_propagation(val=True)
+				metrics.set_values(np.argmax(self.Y_val.T, axis=0), np.argmax(A_last_val, axis=0))
+				print(" - val_acc: {:3.2f}".format(metrics.accuracy() * 100), end='')
 			print(end='\n')
 			self.backward_propagation()
 			self.update(i + 1)

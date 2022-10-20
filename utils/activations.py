@@ -20,7 +20,7 @@ def softmax(Z: np.ndarray) -> np.ndarray:
 	''' Compute the softmax activation function.
 	Commonly used for output layer.
 	Numerically stable version. '''
-	return np.exp(Z - np.max(Z)) / np.exp(Z - np.max(Z)).sum(axis=0, keepdims=True)
+	return np.exp(Z - np.max(Z)) / np.exp(Z - np.max(Z)).sum()
 
 def tanh(Z: np.ndarray) -> np.ndarray:
 	''' Compute the tanh activation function.

@@ -2,15 +2,16 @@ import numpy as np
 
 class Metrics():
 
-	def __init__(self, expected: np.darray, predicted: np.ndarray) -> None:
-		assert isinstance(expected, np.ndarray) \
+	def __init__(self, expected: np.ndarray | None = None, \
+		predicted: np.ndarray | None = None) -> None:
+		assert (isinstance(expected, np.ndarray) \
 			and isinstance(predicted, np.ndarray) \
-			and expected.size != 0 \
-			and expected.shape == predicted.shape
+			and expected.size != 0 and expected.shape == predicted.shape) \
+			or (expected is None and predicted is None)
 		self.y = expected
 		self.y_hat = predicted
 
-	def set_values(self, expected: np.darray, predicted: np.ndarray) -> None:
+	def set_values(self, expected: np.ndarray, predicted: np.ndarray) -> None:
 		''' Set expected and predicted values. '''
 		assert isinstance(expected, np.ndarray) \
 			and isinstance(predicted, np.ndarray) \
@@ -19,14 +20,14 @@ class Metrics():
 		self.y = expected
 		self.y_hat = predicted
 
-	def set_expected(self, expected: np.darray) -> None:
+	def set_expected(self, expected: np.ndarray) -> None:
 		''' Set only expected values. '''
 		assert isinstance(expected, np.ndarray) \
 			and expected.size != 0 \
 			and expected.shape == self.y.shape
 		self.y = expected
 
-	def set_predicted(self, predicted: np.darray) -> None:
+	def set_predicted(self, predicted: np.ndarray) -> None:
 		''' Set only predicted values. '''
 		assert isinstance(predicted, np.ndarray) \
 			and predicted.size != 0 \
@@ -51,7 +52,7 @@ class Metrics():
 		falseNeg = np.sum((self.y == pos_label) & (self.y_hat != pos_label))
 		return truePos / (truePos + falseNeg)
 
-	def f1_score_(self, pos_label=1):
+	def f1_score(self, pos_label=1):
 		'''Compute the F1 score. '''
 		assert isinstance(pos_label, int) or isinstance(pos_label, str)
 		precision = self.precision(pos_label)
