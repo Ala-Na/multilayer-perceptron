@@ -4,9 +4,8 @@ import numpy as np
 from utils.metrics import *
 
 # TODO early_stopping
-# TODO add more metrics
 # TODO check metrics history
-# TODO correct loss
+# TODO compare BCE to keras BCE
 
 class SimpleNeuralNetwork():
 	''' A simple Neural Network model. '''
@@ -236,6 +235,7 @@ class SimpleNeuralNetwork():
 				A_last_val = self.forward_propagation(val=True)
 				metrics.set_values(np.argmax(self.Y_val, axis=0), np.argmax(A_last_val, axis=0))
 				print(" - val_acc: {:3.2f}".format(metrics.accuracy() * 100), end='')
+			#TODO add F1 score ?
 			print(end='\n')
 			self.backward_propagation()
 			self.update(i + 1)
