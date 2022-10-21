@@ -239,4 +239,5 @@ class SimpleNeuralNetwork():
 			print(end='\n')
 			self.backward_propagation()
 			self.update(i + 1)
+		# TODO save weights
 		return self.losses, self.val_losses # historique des loss
