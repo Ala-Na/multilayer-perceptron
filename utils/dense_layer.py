@@ -90,12 +90,13 @@ class DenseLayer():
 	def forward(self, A_prev: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
 		''' Predict activation result according to A_prev (input) and parameters. '''
 		Z = np.dot(self.weights, A_prev) + self.bias
-		return self.activation(Z), Z
+		Z_cpy = Z.copy()
+		return self.activation(Z_cpy), Z
 
 	def final_backward(self, A_last: np.ndarray, Y: np.ndarray, \
 		A_prev: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 		m = A_prev.shape[1]
-		dZ = A_last - Y.T
+		dZ = A_last - Y
 		dW = 1/m * np.dot(dZ, A_prev.T)
 		if self.lambda_ != 0.0:
 			dW += (self.lambda_/m) * self.weights

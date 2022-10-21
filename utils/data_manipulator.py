@@ -4,6 +4,7 @@ from typing import Tuple
 def united_shuffle(x: np.ndarray, y: np.ndarray):
 	''' Shuffles randomly x and y sets (datas and labels) while keeping their
 	correspondence. '''
+	np.random.seed(42) #TODO delete
 	p = np.random.permutation(len(x))
 	return x[p], y[p]
 

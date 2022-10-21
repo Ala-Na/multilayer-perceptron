@@ -64,7 +64,7 @@ class SimpleNeuralNetwork():
 		elif not isinstance(self.Y, np.ndarray) and self.Y.ndim == 2 and self.Y.size != 0:
 			print("\033[93mError in received output\033[0m")
 			return False
-		if loss == 'binary_cross_entropy' and self.Y.shape[1] != 2:
+		if loss == 'binary_cross_entropy' and self.Y.shape[0] != 2:
 			print("\033[93mCan't use binary cross entropy loss on more than 2 classes\033[0m")
 			return False
 		if self.X_val is not None or self.Y_val is not None:
@@ -87,10 +87,10 @@ class SimpleNeuralNetwork():
 			if not isinstance(layer, DenseLayer):
 				print("\033[93mSimpleNeuralNetwork must receive and list of DenseLayer\033[0m")
 				return False
-		if self.X.shape[1] != self.layers[0].weights.shape[1]:
+		if self.X.shape[0] != self.layers[0].weights.shape[1]:
 			print("\033[93mError between input shape and first layer input shape\033[0m")
 			return False
-		elif self.Y.shape[1] != self.layers[-1].weights.shape[0]:
+		elif self.Y.shape[0] != self.layers[-1].weights.shape[0]:
 			print("\033[93mError between output shape and last layer output shape\033[0m")
 			return False
 		L = len(self.layers)
@@ -128,10 +128,10 @@ class SimpleNeuralNetwork():
 		''' Perform the forward propgation in model neural network. '''
 		if val == False:
 			self.infos.clear()
-			layers_activations = [self.X.T]
-			self.infos["A0"] = self.X.T
+			layers_activations = [self.X]
+			self.infos["A0"] = self.X
 		else:
-			layers_activations = [self.X_val.T]
+			layers_activations = [self.X_val]
 		for i, layer in enumerate(self.layers):
 			A, Z = layer.forward(layers_activations[i])
 			layers_activations.append(A)
@@ -158,9 +158,9 @@ class SimpleNeuralNetwork():
 		assert self.layers[L - 1].activation_name == 'sigmoid' \
 			or self.layers[L - 1].activation_name == 'softmax'
 		A_last = self.infos["A" + str(L)] # last activation value (= prediction)
-		Y_pred = np.argmax(A_last, axis=0).T
-		Y = np.argmax(self.Y, axis=1)
-		m = self.Y.shape[0]
+		Y_pred = np.argmax(A_last, axis=0)
+		Y = np.argmax(self.Y, axis=0)
+		m = self.Y.shape[1]
 		cost = -1/m * np.sum(Y * np.log(Y_pred + eps) \
 			+ (1 - Y) * np.log(1 - Y_pred + eps))
 		if self.lambda_ != 0:
@@ -168,9 +168,9 @@ class SimpleNeuralNetwork():
 		cost_val = None
 		if isinstance(self.X_val, np.ndarray) and isinstance(self.Y_val, np.ndarray):
 			A_last_val = self.forward_propagation(val=True)
-			Y_pred_val = np.argmax(A_last_val, axis=0).T
-			Y_val = np.argmax(self.Y_val, axis=1)
-			m_val = self.Y_val.shape[0]
+			Y_pred_val = np.argmax(A_last_val, axis=0)
+			Y_val = np.argmax(self.Y_val, axis=0)
+			m_val = self.Y_val.shape[1]
 			cost_val = -1/m_val * np.sum(Y_val * np.log(Y_pred_val + eps) \
 				+ (1 - Y_val) * np.log(1 - Y_pred_val + eps))
 			if self.lambda_ != 0:
@@ -185,13 +185,14 @@ class SimpleNeuralNetwork():
 		L = len(self.layers)
 		assert self.layers[L - 1].activation_name == 'softmax'
 		A_last = self.infos["A" + str(L)] # last activation value (= prediction)
-		cost = -np.mean(self.Y * np.log(A_last.T + eps))
+		m = A_last.shape[1]
+		cost = -np.sum(self.Y * np.log(np.clip(A_last, eps, 1. - eps))) / m
 		if self.lambda_ != 0:
 			cost += self.regularization_cost()
 		cost_val = None
 		if isinstance(self.X_val, np.ndarray) and isinstance(self.Y_val, np.ndarray):
 			A_last_val = self.forward_propagation(val=True)
-			cost_val = -np.mean(self.Y_val * np.log(A_last_val.T + eps))
+			cost_val = -np.sum(self.Y_val * np.log(np.clip(A_last_val, eps, 1. - eps))) / m
 			if self.lambda_ != 0:
 				cost_val += self.regularization_cost()
 		return np.squeeze(cost), np.squeeze(cost_val)
@@ -202,7 +203,6 @@ class SimpleNeuralNetwork():
 		A_last = self.infos["A" + str(L)] # last activation value (= prediction)
 		A_prev = self.infos["A" + str(L - 1)]
 		dA_prev, dW, db = self.layers[-1].final_backward(A_last, self.Y, A_prev)
-		self.infos["dA" + str(L - 1)] = dA_prev
 		self.infos["dW" + str(L)] = dW
 		self.infos["db" + str(L)] = db
 		for l in range(L - 1, 0, -1):
@@ -210,7 +210,6 @@ class SimpleNeuralNetwork():
 			Z = self.infos["Z" + str(l)]
 			dA_prev, dW, db = self.layers[l - 1].hidden_backward(dA_prev, \
 				A_prev, Z)
-			self.infos["dA" + str(l - 1)] = dA_prev
 			self.infos["dW" + str(l)] = dW
 			self.infos["db" + str(l)] = db
 
@@ -229,7 +228,7 @@ class SimpleNeuralNetwork():
 		print("{} training:".format(self.name))
 		for i in range(nb_iterations):
 			self.forward_propagation()
-			metrics.set_values(np.argmax(self.Y.T, axis=0), np.argmax(self.infos["A" + str(L)], axis=0))
+			metrics.set_values(np.argmax(self.Y, axis=0), np.argmax(self.infos["A" + str(L)], axis=0))
 			train_loss, val_loss = self.loss()
 			self.losses.append(train_loss)
 			print("epoch {}/{} - loss: {:.3f}".format(i + 1, nb_iterations, self.losses[i]), end='')
@@ -239,7 +238,7 @@ class SimpleNeuralNetwork():
 			print(" - acc: {:3.2f}".format(metrics.accuracy() * 100), end='')
 			if val_loss != None:
 				A_last_val = self.forward_propagation(val=True)
-				metrics.set_values(np.argmax(self.Y_val.T, axis=0), np.argmax(A_last_val, axis=0))
+				metrics.set_values(np.argmax(self.Y_val, axis=0), np.argmax(A_last_val, axis=0))
 				print(" - val_acc: {:3.2f}".format(metrics.accuracy() * 100), end='')
 			print(end='\n')
 			self.backward_propagation()

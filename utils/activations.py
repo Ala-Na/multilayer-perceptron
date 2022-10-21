@@ -18,9 +18,8 @@ def relu(Z: np.ndarray) -> np.ndarray:
 
 def softmax(Z: np.ndarray) -> np.ndarray:
 	''' Compute the softmax activation function.
-	Commonly used for output layer.
-	Numerically stable version. '''
-	return np.exp(Z - np.max(Z)) / np.exp(Z - np.max(Z)).sum()
+	Commonly used for output layer. '''
+	return np.exp(Z) / sum(np.exp(Z))
 
 def tanh(Z: np.ndarray) -> np.ndarray:
 	''' Compute the tanh activation function.
