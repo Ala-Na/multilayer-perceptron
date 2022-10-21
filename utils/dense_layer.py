@@ -6,7 +6,7 @@ class DenseLayer():
 	''' A dense model '''
 
 	# Supported initialization, regularization and optimization algorithm
-	supported_initialization = ['random', 'zeros', 'he', 'xavier', 'yosh']
+	supported_initialization = ['random', 'zeros', 'he', 'xavier', 'yoshua']
 	supported_regularization = ['l2', None]
 	supported_optimization = ['momentum', 'rmsprop', 'adam', None]
 
@@ -71,9 +71,9 @@ class DenseLayer():
 		elif init == 'he':
 			weights = np.random.randn(output_shape, input_shape) * np.sqrt(2./input_shape)
 		elif init == 'xavier':
-			weights = np.random.randn(output_shape, input_shape) / np.sqrt(1./input_shape)
-		elif init == 'yosh':
-			weights = np.random.randn(output_shape, input_shape) / np.sqrt(2./(input_shape + output_shape))
+			weights = np.random.randn(output_shape, input_shape) * np.sqrt(1./input_shape)
+		elif init == 'yoshua':
+			weights = np.random.randn(output_shape, input_shape) * np.sqrt(2./(input_shape + output_shape))
 		bias = np.zeros((output_shape, 1))
 		return weights, bias
 

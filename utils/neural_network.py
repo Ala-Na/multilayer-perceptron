@@ -158,21 +158,17 @@ class SimpleNeuralNetwork():
 		assert self.layers[L - 1].activation_name == 'sigmoid' \
 			or self.layers[L - 1].activation_name == 'softmax'
 		A_last = self.infos["A" + str(L)] # last activation value (= prediction)
-		Y_pred = np.argmax(A_last, axis=0)
+		Y_pred = np.clip(np.argmax(A_last, axis=0), eps, 1. - eps)
 		Y = np.argmax(self.Y, axis=0)
-		m = self.Y.shape[1]
-		cost = -1/m * np.sum(Y * np.log(Y_pred + eps) \
-			+ (1 - Y) * np.log(1 - Y_pred + eps))
+		cost = -np.mean((1 - Y) * np.log(1 - Y_pred) + Y * np.log(Y_pred), axis=0)
 		if self.lambda_ != 0:
 			cost += self.regularization_cost()
 		cost_val = None
 		if isinstance(self.X_val, np.ndarray) and isinstance(self.Y_val, np.ndarray):
 			A_last_val = self.forward_propagation(val=True)
-			Y_pred_val = np.argmax(A_last_val, axis=0)
+			Y_pred_val = np.clip(np.argmax(A_last_val, axis=0), eps, 1. - eps)
 			Y_val = np.argmax(self.Y_val, axis=0)
-			m_val = self.Y_val.shape[1]
-			cost_val = -1/m_val * np.sum(Y_val * np.log(Y_pred_val + eps) \
-				+ (1 - Y_val) * np.log(1 - Y_pred_val + eps))
+			cost_val = -np.mean((1 - Y_val) * np.log(1 - Y_pred_val) + Y_val * np.log(Y_pred_val), axis=0)
 			if self.lambda_ != 0:
 				cost_val += self.regularization_cost()
 		return np.squeeze(cost), np.squeeze(cost_val)

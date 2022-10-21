@@ -28,13 +28,12 @@ if __name__ == "__main__":
 	x_train, x_val, y_train, y_val = x_train.T, x_val.T, y_train.T, y_val.T
 
 	# Create NN
-	dense1 = DenseLayer(30,64, activation='relu', initialization='he')
-	#dense2 = DenseLayer(256, 128, activation='relu', initialization='he')
-	#dense3 = DenseLayer(128, 64, activation='relu', initialization='he')
-	#dense4 = DenseLayer(64, 32, activation='relu', initialization='he')
-	dense5 = DenseLayer(64, 2, final=True, activation='softmax', initialization='he')
-	# model = SimpleNeuralNetwork([dense1, dense2, dense3, dense4, dense5], x_train, y_train, x_val, y_val, optimization=None, name="First try", alpha=0.0001)
-	model = SimpleNeuralNetwork([dense1, dense5], x_train, y_train, x_val, y_val, loss='binary_cross_entropy', optimization=None, name="First try", alpha=0.001)
-	losses, val_losses = model.fit(50000)
+	dense1 = DenseLayer(30, 256, activation='relu', initialization='he')
+	dense2 = DenseLayer(256, 128, activation='relu', initialization='he')
+	dense3 = DenseLayer(128, 64, activation='relu', initialization='he')
+	dense4 = DenseLayer(64, 32, activation='relu', initialization='he')
+	dense5 = DenseLayer(32, 2, final=True, activation='softmax', initialization='xavier')
+	model = SimpleNeuralNetwork([dense1, dense2, dense3, dense4, dense5], x_train, y_train, x_val, y_val, optimization=None, name="First try", alpha=0.001)
+	losses, val_losses = model.fit(10000)
 
 
