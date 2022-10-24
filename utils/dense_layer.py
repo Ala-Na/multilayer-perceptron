@@ -59,6 +59,7 @@ class DenseLayer():
 		self.lambda_ = lambda_ if regularization != None else 0
 		self.initialize_step_size()
 		self.initialize_velocity()
+		self.prev_weights, self.prev_bias = None, None
 
 	def initialize_parameters(self, input_shape: int, output_shape: int, \
 		init: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -86,6 +87,16 @@ class DenseLayer():
 		''' Initialize velocity for performing RMSprop or adam optimization'''
 		self.weights_step_size = np.zeros(self.weights.shape)
 		self.bias_step_size = np.zeros(self.bias.shape)
+
+	def save_parameters(self) -> None:
+		''' Save parameters in prev_weights and prev_bias, useful for early stopping. '''
+		self.prev_weights = self.weights
+		self.prev_bias = self.bias
+
+	def rewind_saved_parameters(self) -> None:
+		''' Rewind to saved parameters in prev_weights and prev_bias, useful for early stopping. '''
+		self.weights = self.prev_weights
+		self.bias = self.prev_bias
 
 	def forward(self, A_prev: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
 		''' Predict activation result according to A_prev (input) and parameters. '''

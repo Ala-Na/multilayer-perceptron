@@ -2,8 +2,8 @@ import numpy as np
 
 class Metrics():
 
-	def __init__(self, expected: np.ndarray | None = None, \
-		predicted: np.ndarray | None = None) -> None:
+	def __init__(self, expected: np.ndarray or None = None, \
+		predicted: np.ndarray or None = None) -> None:
 		assert (isinstance(expected, np.ndarray) \
 			and isinstance(predicted, np.ndarray) \
 			and expected.size != 0 and expected.shape == predicted.shape) \
@@ -57,4 +57,5 @@ class Metrics():
 		assert isinstance(pos_label, int) or isinstance(pos_label, str)
 		precision = self.precision(pos_label)
 		recall = self.recall(pos_label)
-		return 2 * precision * recall / (precision + recall)
+		div = np.clip(precision + recall, 1e-15, None)
+		return (2 * precision * recall) / (div)

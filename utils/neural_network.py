@@ -3,24 +3,21 @@ from utils.dense_layer import DenseLayer
 import numpy as np
 from utils.metrics import *
 
-# TODO early_stopping
-# TODO check metrics history
-# TODO compare BCE to keras BCE
-
 class SimpleNeuralNetwork():
 	''' A simple Neural Network model. '''
 
 	supported_loss = ['cross_entropy', 'binary_cross_entropy']
 	supported_regularization = ['l2', None]
 	supported_optimization = ['rmsprop', 'adam', 'momentum', None]
+	supported_metrics = ['accuracy', 'precision', 'recall', 'f1']
 
 	def __init__(self, layers: list, X: np.ndarray, Y: np.ndarray, \
-		X_val: np.ndarray | None = None, Y_val: np.ndarray | None = None, \
+		X_val: np.ndarray or None = None, Y_val: np.ndarray or None = None, \
 		alpha: float = 0.001, loss: str = 'binary_cross_entropy', \
 		regularization: str = None, lambda_: float = 1.0, \
-		optimization: str | None = None, beta_1: float = 0.9, \
+		optimization: str or None = None, beta_1: float = 0.9, \
 		beta_2: float = 0.99, epsilon: float = 1e-8, \
-		name: str = 'Model') -> None:
+		name: str = 'Model', metrics: list = [], stop: int or None = None) -> None:
 		''' Initiation function of model '''
 
 		# Basics checks
@@ -32,6 +29,7 @@ class SimpleNeuralNetwork():
 		assert isinstance(beta_1, float) and (beta_1 > 0 and beta_1 <= 1)
 		assert isinstance(beta_2, float) and (beta_2 > 0 and beta_2 <= 1)
 		assert isinstance(epsilon, float)
+		assert isinstance(stop, int) or stop is None
 
 		# Assignation and others checks
 		loss_functions = [self.cross_entropy_loss, self.binary_cross_entropy_loss]
@@ -42,7 +40,8 @@ class SimpleNeuralNetwork():
 		self.Y = Y
 		self.X_val = X_val
 		self.Y_val = Y_val
-		assert self._check_valid_arrays(loss) == True
+		if X_val is not None and Y_val is not None:
+			assert self._check_valid_arrays(loss) == True
 		self.layers = layers
 		assert self._check_valid_layers() == True
 		self.losses = []
@@ -54,6 +53,10 @@ class SimpleNeuralNetwork():
 		self.beta_2 = beta_2
 		self.epsilon = epsilon
 		self._uniformate_layers(regularization)
+		for metric in metrics:
+			assert metric in self.supported_metrics, "\033[93mMetric {} not recognized\033[0m".format(metric)
+		self.metrics = metrics
+		self.stop = stop
 
 	def _check_valid_arrays(self, loss: str) -> bool:
 		''' Check validity of training and validation set. '''
@@ -117,7 +120,8 @@ class SimpleNeuralNetwork():
 				info = True
 				print("\033[93mAll layers will be standardized with model settings\033[0m")
 			layer.alpha = self.alpha
-			layer.lambda_ = self.lambda_
+			if regularization is not None:
+				layer.lambda_ = self.lambda_
 			layer.beta_1 = self.beta_1
 			layer.beta_2 = self.beta_2
 			layer.epsilon = self.epsilon
@@ -215,29 +219,96 @@ class SimpleNeuralNetwork():
 			db = self.infos["db" + str(i + 1)]
 			layer.update_parameters(dW, db, time)
 
-	def fit(self, nb_iterations: int = 10000) -> None:
+	def save_current_parameters(self) -> None:
+		''' Save each layer current parameters. Useful for early stopping. '''
+		for layer in self.layers:
+			layer.save_parameters()
+
+	def rewind_parameters(self) -> None:
+		''' Rewind each layer to previous saved parameters. Useful for early stopping. '''
+		for layer in self.layers:
+			layer.rewind_saved_parameters()
+
+	def fit(self, nb_iterations: int = 10000) -> dict:
 		''' Perform forward and backward propagation on a given number of epochs. '''
 		assert nb_iterations > 0
 		metrics = Metrics()
 		L = len(self.layers)
+		best_val_loss, best_val_epoch = None, None
+		acc = []
+		val_acc = []
+		prec = []
+		val_prec = []
+		rec = []
+		val_rec = []
+		f1 = []
+		val_f1 = []
 		print("{} training:".format(self.name))
 		for i in range(nb_iterations):
 			self.forward_propagation()
-			metrics.set_values(np.argmax(self.Y, axis=0), np.argmax(self.infos["A" + str(L)], axis=0))
 			train_loss, val_loss = self.loss()
 			self.losses.append(train_loss)
-			print("epoch {}/{} - loss: {:.3f}".format(i + 1, nb_iterations, self.losses[i]), end='')
 			if val_loss != None:
 				self.val_losses.append(val_loss)
-				print(" - val_loss: {:.3f}".format(self.val_losses[i]), end='')
-			print(" - acc: {:3.2f}".format(metrics.accuracy() * 100), end='')
+			display = False
+			if i == 0 or (i + 1) % 100 == 0:
+				display = True
+			if display:
+				print("epoch {}/{} - loss: {:.3f}".format(i + 1, nb_iterations, self.losses[i]), end='')
+			metrics.set_values(np.argmax(self.Y, axis=0), np.argmax(self.infos["A" + str(L)], axis=0))
+			if 'accuracy' in self.metrics:
+				acc.append(metrics.accuracy())
+				if display:
+					print(" - acc: {:3.2f}".format(acc[i] * 100), end='')
+			if 'precision' in self.metrics:
+				prec.append(metrics.precision())
+				if display:
+					print(" - prec: {:3.2f}".format(prec[i] * 100), end='')
+			if 'recall' in self.metrics:
+				rec.append(metrics.recall())
+				if display:
+					print(" - rec: {:3.2f}".format(rec[i] * 100), end='')
+			if 'f1' in self.metrics:
+				f1.append(metrics.f1_score())
+				if display:
+					print(" - f1: {:3.2f}".format(f1[i] * 100), end='')
 			if val_loss != None:
+				if display:
+					print(" - val_loss: {:.3f}".format(self.val_losses[i]), end='')
 				A_last_val = self.forward_propagation(val=True)
 				metrics.set_values(np.argmax(self.Y_val, axis=0), np.argmax(A_last_val, axis=0))
-				print(" - val_acc: {:3.2f}".format(metrics.accuracy() * 100), end='')
-			#TODO add F1 score ?
-			print(end='\n')
+				if 'accuracy' in self.metrics:
+					val_acc.append(metrics.accuracy())
+					if display:
+						print(" - val_acc: {:3.2f}".format(val_acc[i] * 100), end='')
+				if 'precision' in self.metrics:
+					val_prec.append(metrics.precision())
+					if display:
+						print(" - val_prec: {:3.2f}".format(val_prec[i] * 100), end='')
+				if 'recall' in self.metrics:
+					val_rec.append(metrics.recall())
+					if display:
+						print(" - val_rec: {:3.2f}".format(val_rec[i] * 100), end='')
+				if 'f1' in self.metrics:
+					val_f1.append(metrics.f1_score())
+					if display:
+						print(" - val_f1: {:3.2f}".format(val_f1[i] * 100), end='')
+				if display:
+					print(end='\n')
+			if self.stop is not None:
+				if val_loss is not None and (best_val_loss is None or round(best_val_loss, 6) > round(val_loss, 6)):
+					best_val_loss, best_val_epoch = val_loss, i
+					self.save_current_parameters()
+				if best_val_epoch is not None and best_val_epoch < i - self.stop:
+					print("Early stopping at epoch {} to get back to epoch {} (val_loss: {:6.6f}, best_val_loss {:6.6f})".format(i + 1, best_val_epoch + 1, val_loss, best_val_loss))
+					self.rewind_parameters()
+					break
 			self.backward_propagation()
 			self.update(i + 1)
 		# TODO save weights
-		return self.losses, self.val_losses # historique des loss
+		if best_val_epoch is None:
+			best_val_epoch = nb_iterations
+		return {"loss": self.losses, "val_loss": self.val_losses, \
+			"best_val_epoch": best_val_epoch, "acc": acc, "val_acc": val_acc, \
+			"prec": prec, "val_prec": val_prec, "rec": rec, "val_rec": val_rec, \
+			"f1": f1, "val_f1": val_f1} # historique
