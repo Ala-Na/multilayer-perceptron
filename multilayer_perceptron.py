@@ -13,6 +13,7 @@ from matplotlib.lines import Line2D
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser("Multilayer Perceptron - Program")
+	parser.add_argument("--seed", type=int, help="Optional. Set seed for random draw.")
 	parser.add_argument("--metrics", nargs="+", default=[], choices=['accuracy', 'precision', 'recall', 'f1'], type=str, help="Optional. Metrics to display other than loss. Available options: accuracy, precision, recall and f1.")
 	parser.add_argument("--trainset_only", action='store_true', default=False, help="Optional. No creation of a validation set. Set to false by default.")
 	parser.add_argument("--epochs", default=10000, type=int, help="Optional. Number of epochs to train our model on.")
@@ -59,12 +60,12 @@ if __name__ == "__main__":
 
 		# Cut into training/validation sets and scale x
 		if args.trainset_only == False:
-			x_train, x_val, y_train, y_val = subsets_creator(datas, one_hot_labels, 0.8)
+			x_train, x_val, y_train, y_val = subsets_creator(datas, one_hot_labels, 0.8, args.seed)
 			x_train, fqrt, tqrt = scaler(x_train, 'robust')
 			x_val, _, _ = scaler(x_val, 'robust', fqrt, tqrt)
 			x_train, x_val, y_train, y_val = x_train.T, x_val.T, y_train.T, y_val.T
 		else:
-			x_train, y_train = united_shuffle(datas, one_hot_labels)
+			x_train, y_train = united_shuffle(datas, one_hot_labels, args.seed)
 			x_train, fqrt, tqrt = scaler(x_train, 'robust')
 			x_train, x_val, y_train, y_val = x_train.T, None, y_train.T, None
 
@@ -75,12 +76,12 @@ if __name__ == "__main__":
 		for i, dim in enumerate(args.dim):
 			if i == 0:
 				print("Layer 1:\ninput dim = 30 | output dim = {} | activation = relu".format(dim))
-				denses.append(DenseLayer(30, dim, activation='relu', initialization='he'))
+				denses.append(DenseLayer(30, dim, activation='relu', initialization='he', seed= args.seed))
 			else:
 				print("Layer {}:\ninput dim = {} | output dim = {} | activation = relu".format(i + 1, args.dim[i - 1], dim))
-				denses.append(DenseLayer(args.dim[i - 1], dim, activation='relu', initialization='he'))
+				denses.append(DenseLayer(args.dim[i - 1], dim, activation='relu', initialization='he', seed= args.seed))
 		print("Layer {}:\ninput dim = {} | output dim = 2 | activation = softmax\n-------------------\n".format(len(args.dim) + 1, args.dim[-1]))
-		denses.append(DenseLayer(args.dim[-1], 2, final=True, activation='softmax', initialization='xavier'))
+		denses.append(DenseLayer(args.dim[-1], 2, final=True, activation='softmax', initialization='xavier', seed= args.seed))
 		model = SimpleNeuralNetwork(denses, x_train, y_train, x_val, y_val, name=args.name, optimization=args.opti, alpha=args.alpha, metrics=args.metrics, stop=args.stop, lambda_=args.lambda_)
 		history = model.fit(args.epochs)
 
@@ -155,8 +156,6 @@ if __name__ == "__main__":
 		fig, axs = plt.subplots(2, figsize=(20, 20))
 		axs[1].set_xlabel("Epochs")
 		axs[0].set_xlabel("Epochs")
-		axs[1].set_yticks([])
-		axs[0].set_yticks([])
 		legend0 = [Line2D([0], [0], color='black', lw=6, alpha=0.5, linestyle='solid'), \
 			Line2D([0], [0], color='black', lw=1, linestyle='solid')]
 		legend1 = [Line2D([0], [0], color='grey', lw=6, alpha=0.5, linestyle='solid'), \
@@ -169,61 +168,91 @@ if __name__ == "__main__":
 		for i in range(len(full_df)):
 			if type(full_df.iloc[i]['Loss']) == str:
 				array = full_df.iloc[i]['Loss'][1:-2].split(", ")
-				array = [float(nb) for nb in array]
+				while '' in array:
+					array.remove('')
+				if len(array) > 0:
+					array = [float(nb) for nb in array]
 			else:
 				array = full_df.iloc[i]['Loss']
 			axs[0].plot(array, label="Loss", color=color[i], linewidth=6, alpha=0.5)
 			if type(full_df.iloc[i]['Val_loss']) == str:
 				array = full_df.iloc[i]['Val_loss'][1:-2].split(", ")
-				array = [float(nb) for nb in array]
+				while '' in array:
+					array.remove('')
+				if len(array) > 0:
+					array = [float(nb) for nb in array]
 			else:
 				array = full_df.iloc[i]['Val_loss']
 			axs[0].plot(array, label="Val loss", color=color[i])
 			if type(full_df.iloc[i]['Acc']) == str:
 				array = full_df.iloc[i]['Acc'][1:-2].split(", ")
-				array = [float(nb) for nb in array]
+				while '' in array:
+					array.remove('')
+				if len(array) > 0:
+					array = [float(nb) for nb in array]
 			else:
 				array = full_df.iloc[i]['Acc']
 			axs[1].plot(array, label="Accuracy", color=color[i], linestyle='dashdot', linewidth=6, alpha=0.5)
 			if type(full_df.iloc[i]['Val_acc']) == str:
 				array = full_df.iloc[i]['Val_acc'][1:-2].split(", ")
-				array = [float(nb) for nb in array]
+				while '' in array:
+					array.remove('')
+				if len(array) > 0:
+					array = [float(nb) for nb in array]
 			else:
 				array = full_df.iloc[i]['Val_acc']
 			axs[1].plot(array, label="Val acc", color=color[i], linestyle='dashdot')
 			if type(full_df.iloc[i]['Prec']) == str:
 				array = full_df.iloc[i]['Prec'][1:-2].split(", ")
-				array = [float(nb) for nb in array]
+				while '' in array:
+					array.remove('')
+				if len(array) > 0:
+					array = [float(nb) for nb in array]
 			else:
 				array = full_df.iloc[i]['Prec']
 			axs[1].plot(array, label="Prec", color=color[i], linestyle='dashed', linewidth=6, alpha=0.5)
 			if type(full_df.iloc[i]['Val_prec']) == str:
 				array = full_df.iloc[i]['Val_prec'][1:-2].split(", ")
-				array = [float(nb) for nb in array]
+				while '' in array:
+					array.remove('')
+				if len(array) > 0:
+					array = [float(nb) for nb in array]
 			else:
 				array = full_df.iloc[i]['Val_prec']
 			axs[1].plot(array, label="Val prec", color=color[i], linestyle='dashed')
 			if type(full_df.iloc[i]['Val_prec']) == str:
 				array = full_df.iloc[i]['Val_prec'][1:-2].split(", ")
-				array = [float(nb) for nb in array]
+				while '' in array:
+					array.remove('')
+				if len(array) > 0:
+					array = [float(nb) for nb in array]
 			else:
 				array = full_df.iloc[i]['Rec']
 			axs[1].plot(array, label="Rec", color=color[i], linestyle='dotted', linewidth=6, alpha=0.5)
 			if type(full_df.iloc[i]['Val_rec']) == str:
 				array = full_df.iloc[i]['Val_rec'][1:-2].split(", ")
-				array = [float(nb) for nb in array]
+				while '' in array:
+					array.remove('')
+				if len(array) > 0:
+					array = [float(nb) for nb in array]
 			else:
 				array = full_df.iloc[i]['Val_rec']
 			axs[1].plot(array, label="Val rec", color=color[i], linestyle='dotted')
 			if type(full_df.iloc[i]['F1']) == str:
 				array = full_df.iloc[i]['F1'][1:-2].split(", ")
-				array = [float(nb) for nb in array]
+				while '' in array:
+					array.remove('')
+				if len(array) > 0:
+					array = [float(nb) for nb in array]
 			else:
 				array = full_df.iloc[i]['F1']
 			axs[1].plot(array, label="F1", color=color[i], linestyle='solid', linewidth=6, alpha=0.5)
 			if type(full_df.iloc[i]['Val_f1']) == str:
 				array = full_df.iloc[i]['Val_f1'][1:-2].split(", ")
-				array = [float(nb) for nb in array]
+				while '' in array:
+					array.remove('')
+				if len(array) > 0:
+					array = [float(nb) for nb in array]
 			else:
 				array = full_df.iloc[i]['Val_f1']
 			axs[1].plot(array, label="Val F1", color=color[i], linestyle='solid')

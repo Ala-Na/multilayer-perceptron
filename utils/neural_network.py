@@ -55,32 +55,32 @@ class SimpleNeuralNetwork():
 		self.epsilon = epsilon
 		self._uniformate_layers(regularization)
 		for metric in metrics:
-			assert metric in self.supported_metrics, "\033[93mMetric {} not recognized\033[0m".format(metric)
+			assert metric in self.supported_metrics, "\033[91mMetric {} not recognized\033[0m".format(metric)
 		self.metrics = metrics
 		self.stop = stop
 
 	def _check_valid_arrays(self, loss: str) -> bool:
 		''' Check validity of training and validation set. '''
 		if not isinstance(self.X, np.ndarray) and self.X.ndim == 2 and self.X.size != 0:
-			print("\033[93mError in received input\033[0m")
+			print("\033[91mError in received input\033[0m")
 			return False
 		elif not isinstance(self.Y, np.ndarray) and self.Y.ndim == 2 and self.Y.size != 0:
-			print("\033[93mError in received output\033[0m")
+			print("\033[91mError in received output\033[0m")
 			return False
 		if loss == 'binary_cross_entropy' and self.Y.shape[0] != 2:
-			print("\033[93mCan't use binary cross entropy loss on more than 2 classes\033[0m")
+			print("\033[91mCan't use binary cross entropy loss on more than 2 classes\033[0m")
 			return False
 		if self.X_val is not None or self.Y_val is not None:
 			if self.X_val is None or self.Y_val is None:
-				print("\033[93mMissing either validation input or output\033[0m")
+				print("\033[91mMissing either validation input or output\033[0m")
 				return False
 			elif not isinstance(self.X_val, np.ndarray) and self.X_val.size != 0 \
 				and self.X_val.shape[1] == self.X.shape[1]:
-				print("\033[93mError in received validation input\033[0m")
+				print("\033[91mError in received validation input\033[0m")
 				return False
 			elif not isinstance(self.Y_val, np.ndarray) and self.Y_val.size != 0 \
 				and self.Y_val.shape[1] == self.Y.shape[1]:
-				print("\033[93mError in received validation output\033[0m")
+				print("\033[91mError in received validation output\033[0m")
 				return False
 		return True
 
@@ -88,26 +88,26 @@ class SimpleNeuralNetwork():
 		''' Check validity of layers inside model. '''
 		for layer in self.layers:
 			if not isinstance(layer, DenseLayer):
-				print("\033[93mSimpleNeuralNetwork must receive and list of DenseLayer\033[0m")
+				print("\033[91mSimpleNeuralNetwork must receive and list of DenseLayer\033[0m")
 				return False
 		if self.X.shape[0] != self.layers[0].weights.shape[1]:
-			print("\033[93mError between input shape and first layer input shape\033[0m")
+			print("\033[91mError between input shape and first layer input shape\033[0m")
 			return False
 		elif self.Y.shape[0] != self.layers[-1].weights.shape[0]:
-			print("\033[93mError between output shape and last layer output shape\033[0m")
+			print("\033[91mError between output shape and last layer output shape\033[0m")
 			return False
 		L = len(self.layers)
 		for i, layer in enumerate(self.layers):
 			if i != 0:
 				if layer.weights.shape[1] != l_prev.weights.shape[0] :
-					print("\033[93mError of compatibility between layers\033[0m")
+					print("\033[91mError of compatibility between layers\033[0m")
 					return False
 			if i != L - 1 and layer.derivative is None:
-				print("\033[93mFinal layer in non-final position\033[0m")
+				print("\033[91mFinal layer in non-final position\033[0m")
 				return False
 			l_prev = layer
 		if l_prev.derivative is not None:
-			print("\033[93mNon final layer in final position\033[0m")
+			print("\033[91mNon final layer in final position\033[0m")
 			return False
 		return True
 
@@ -306,7 +306,7 @@ class SimpleNeuralNetwork():
 					best_val_loss, best_val_epoch = val_loss, i
 					self.save_current_parameters()
 				if best_val_epoch is not None and best_val_epoch < i - self.stop:
-					print("Early stopping at epoch {} to get back to epoch {} (val_loss: {:6.6f}, best_val_loss {:6.6f})".format(i + 1, best_val_epoch + 1, val_loss, best_val_loss))
+					print("\033[92mEarly stopping at epoch {} to get back to epoch {} (val_loss: {:6.6f}, best_val_loss {:6.6f})\033[0m".format(i + 1, best_val_epoch + 1, val_loss, best_val_loss))
 					self.rewind_parameters()
 					break
 			self.backward_propagation()

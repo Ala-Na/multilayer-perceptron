@@ -19,7 +19,7 @@ class DenseLayer():
 			initialization: str = 'random', activation: str = 'relu', \
 			alpha: float = 0.001, regularization: str = None, lambda_: float = 1.0, \
 			beta_1: float = 0.9, beta_2: float = 0.99, epsilon: float = 1e-8, \
-			optimization: str = None) -> None :
+			optimization: str = None, seed: int = None) -> None :
 
 		# Basics checks
 		assert isinstance(final, bool)
@@ -33,9 +33,10 @@ class DenseLayer():
 		assert regularization in self.supported_regularization
 		assert optimization in self.supported_optimization
 		assert initialization in self.supported_initialization
+		assert isinstance(seed, int) or seed == None
 
 		# Assignation and others checks
-		self.weights, self.bias = self.initialize_parameters(input_shape, output_shape, initialization)
+		self.weights, self.bias = self.initialize_parameters(input_shape, output_shape, initialization, seed)
 		self.alpha = alpha
 		self.original_alpha = alpha
 		self.beta_1 = beta_1
@@ -62,9 +63,10 @@ class DenseLayer():
 		self.prev_weights, self.prev_bias = None, None
 
 	def initialize_parameters(self, input_shape: int, output_shape: int, \
-		init: str) -> Tuple[np.ndarray, np.ndarray]:
+		init: str, seed: int or None = None) -> Tuple[np.ndarray, np.ndarray]:
 		'''Initialize parameters (weights and bias) of model'''
-		np.random.seed(42) # TODO delete
+		if seed != None:
+			np.random.seed(seed)
 		if init == 'random':
 			weights = np.random.randn(output_shape, input_shape) * 0.01
 		elif init == 'zeros':

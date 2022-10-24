@@ -1,21 +1,23 @@
+from unittest.mock import NonCallableMagicMock
 import numpy as np
 from typing import Tuple
 
-def united_shuffle(x: np.ndarray, y: np.ndarray):
+def united_shuffle(x: np.ndarray, y: np.ndarray, seed: int or None = None):
 	''' Shuffles randomly x and y sets (datas and labels) while keeping their
 	correspondence. '''
-	np.random.seed(42) #TODO delete
+	if seed != None:
+		np.random.seed(seed)
 	p = np.random.permutation(len(x))
 	return x[p], y[p]
 
-def subsets_creator(x:np.ndarray, y:np.ndarray, proportion):
+def subsets_creator(x:np.ndarray, y:np.ndarray, proportion: float, seed: int or None = None):
 	''' Shuffles and splits the dataset (given by x and y) into a training and
 	a test set, while respecting the given proportion of examples to be kept in
 	the	training set.
 	Returns x_train, x_test, y_train, y_test. '''
 	assert isinstance(proportion, float) and proportion > 0.0 and proportion < 1.0, "\033[93mError in proportion for subsets creation.\033[0m"
 	ind_split = (int)(x.shape[0] * proportion)
-	x, y = united_shuffle(x, y)
+	x, y = united_shuffle(x, y, seed)
 	return (x[:ind_split, :], x[ind_split:, :], y[:ind_split, :], y[ind_split:, :])
 
 def one_hot_class_encoder(to_encode: np.ndarray, nb_classes: int) -> np.ndarray:
