@@ -1,8 +1,10 @@
+from re import M
 import numpy as np
 import pandas as pd
 from utils.data_manipulator import *
 from utils.dense_layer import *
 from utils.neural_network import *
+from utils.metrics import *
 import argparse
 import os
 import matplotlib.pyplot as plt
@@ -25,20 +27,20 @@ if __name__ == "__main__":
 	parser.add_argument("--predict", type=str, default=None, help="Optional. Set program in prediction mode. A dataset's path to perform a prediction on must be given. Use --name option to set model to use.")
 	args = parser.parse_args()
 
-	if args.trainset_only is True and (args.stop is not None or args.show_only is False):
-		print("Options --trainset_only and --stop | --show_only are not compatible.")
+	if args.trainset_only is True and (args.stop != None or args.show_only is False):
+		print("\033[93mOptions --trainset_only and --stop | --show_only are not compatible.\033[0m")
 		exit(1)
 	elif args.show_all is True and args.show_only is True:
-		print("Options --show_all and --show_only are not compatible.")
+		print("\033[93mOptions --show_all and --show_only are not compatible.\033[0m")
 		exit(1)
-	elif args.predict is not None and (len(args.metrics) > 0 \
-		or args.trainset_only is True or args.epochs is True or args.opti is not None \
-		or args.stop is not None or args.lambda_ is not 1. or args.show_all is True \
+	elif args.predict != None and (len(args.metrics) > 0 \
+		or args.trainset_only is True or args.epochs is True or args.opti != None \
+		or args.stop != None or args.lambda_ != 1. or args.show_all is True \
 		or args.show_only is True):
-		print("Options --predict is only compatible with name --option.")
+		print("\033[93mOptions --predict is only compatible with --name option.\033[0m")
 		exit(1)
 
-	if args.show_only == False:
+	if args.predict is None and args.show_only == False:
 		# First, retrieve labels nd data from .csv file
 		df = pd.read_csv("data.csv", header=None, index_col=0)
 		labels = df.iloc[:, 0]
@@ -136,11 +138,11 @@ if __name__ == "__main__":
 			fig.suptitle("Metrics evolution on newly trained model")
 		plt.show()
 
-	else:
+	elif args.show_only is True:
 		try:
 			full_df = pd.read_csv('experiments.csv')
 		except:
-			print("Can't open experiments.csv")
+			print("\033[93mCan't open experiments.csv\033[0m")
 			exit(1)
 
 	# Show models on graph
@@ -231,3 +233,39 @@ if __name__ == "__main__":
 		fig.suptitle("Metrics evolution on all trained models")
 		fig.legend(legend_lines, legend_title)
 		plt.show()
+
+	if args.predict != None:
+		# Open file with dataset
+		# NOTE : No indication of dataset format, so I suppose it's same as initial dataset
+		try:
+			df = pd.read_csv(args.predict, header=None, index_col=0)
+		except:
+			print("\033[93mCan't open {} file\033[0m".format(args.predict))
+			exit(1)
+		labels = df.iloc[:, 0]
+		datas = df.iloc[:, 1:]
+		if df.isnull().values.any():
+			print("\033[91mNaN values in dataset : File corrupted\033[0m")
+			exit(1)
+
+		# Transform it in numpy array and replace M and B by numbers
+		labels = labels.to_numpy(dtype=np.dtype(str))
+		datas = datas.to_numpy(dtype=np.dtype(float))
+		datas, _, _ = scaler(datas, 'robust')
+		labels_nbr = np.select([labels =='B', labels == 'M'], [0 , 1], labels).astype(int)
+
+		# Retrieve model from pickle file
+		try:
+			model = None
+			with open(args.name, 'rb') as inp:
+				model = pickle.load(inp)
+		except:
+			print("\033[93mCan't retrieve model object in {} file\033[0m".format(args.name))
+			exit(1)
+		prediction = model.prediction(datas.T)
+		prediction_labels = np.select([prediction == 0, prediction == 1], ['B' , 'M'], prediction).astype(str)
+
+		print('Prediction for {} elements:\n'.format(len(prediction_labels)), prediction_labels, '\n')
+		metrics = Metrics(labels_nbr, prediction)
+		print('=> Accuracy: {:5.2f} | Precision: {:5.2f} | Recall: {:5.2f} | F1 score: {:5.2f}'.format(metrics.accuracy() * 100, metrics.precision() * 100, \
+			metrics.recall() * 100, metrics.f1_score() * 100))

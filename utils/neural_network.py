@@ -319,3 +319,11 @@ class SimpleNeuralNetwork():
 			"best_val_epoch": best_val_epoch, "acc": acc, "val_acc": val_acc, \
 			"prec": prec, "val_prec": val_prec, "rec": rec, "val_rec": val_rec, \
 			"f1": f1, "val_f1": val_f1} # historique
+
+	def prediction(self, to_predict: np.ndarray) -> np.ndarray:
+		''' Perform prediction of an array. '''
+		layers_activations = [to_predict]
+		for i, layer in enumerate(self.layers):
+			A, _ = layer.forward(layers_activations[i])
+			layers_activations.append(A)
+		return np.argmax(A, axis=0)
