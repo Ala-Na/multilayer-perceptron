@@ -2,6 +2,7 @@ from typing import Tuple
 from utils.dense_layer import DenseLayer
 import numpy as np
 from utils.metrics import *
+import pickle
 
 class SimpleNeuralNetwork():
 	''' A simple Neural Network model. '''
@@ -229,6 +230,11 @@ class SimpleNeuralNetwork():
 		for layer in self.layers:
 			layer.rewind_saved_parameters()
 
+	def save_model(self) -> None:
+		''' Save model in a pickle file. '''
+		with open(self.name, 'wb') as outp:
+			pickle.dump(self, outp, pickle.HIGHEST_PROTOCOL)
+
 	def fit(self, nb_iterations: int = 10000) -> dict:
 		''' Perform forward and backward propagation on a given number of epochs. '''
 		assert nb_iterations > 0
@@ -243,7 +249,7 @@ class SimpleNeuralNetwork():
 		val_rec = []
 		f1 = []
 		val_f1 = []
-		print("{} training:".format(self.name))
+		print("\n{} training:\n-------------".format(self.name))
 		for i in range(nb_iterations):
 			self.forward_propagation()
 			train_loss, val_loss = self.loss()
@@ -251,7 +257,7 @@ class SimpleNeuralNetwork():
 			if val_loss != None:
 				self.val_losses.append(val_loss)
 			display = False
-			if i == 0 or (i + 1) % 100 == 0:
+			if i == 0 or (i + 1) % 100 == 0 or i == nb_iterations - 1:
 				display = True
 			if display:
 				print("epoch {}/{} - loss: {:.3f}".format(i + 1, nb_iterations, self.losses[i]), end='')
@@ -305,9 +311,10 @@ class SimpleNeuralNetwork():
 					break
 			self.backward_propagation()
 			self.update(i + 1)
-		# TODO save weights
+		print()
 		if best_val_epoch is None:
 			best_val_epoch = nb_iterations
+		self.save_model()
 		return {"loss": self.losses, "val_loss": self.val_losses, \
 			"best_val_epoch": best_val_epoch, "acc": acc, "val_acc": val_acc, \
 			"prec": prec, "val_prec": val_prec, "rec": rec, "val_rec": val_rec, \
