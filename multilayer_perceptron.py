@@ -26,7 +26,15 @@ if __name__ == "__main__":
 	parser.add_argument("--show_all", action='store_true', default=False, help="Optional. Show all models saved in experiments.csv on a graph. Set to false by default.")
 	parser.add_argument("--show_only", action='store_true', default=False, help="Optional. Only show models saved in experiments.csv on a graph. No training performed. Set to false by default.")
 	parser.add_argument("--predict", type=str, default=None, help="Optional. Set program in prediction mode. A dataset's path to perform a prediction on must be given. Use --name option to set model to use.")
+	parser.add_argument("--reset", action='store_true', default=False, help="Optional. Only show models saved in experiments.csv on a graph. No training performed. Set to false by default.")
 	args = parser.parse_args()
+
+	if args.reset is True:
+		os.remove("experiments.csv")
+		lst_pkl = os.listdir(".")
+		for item in lst_pkl:
+			if item.endswith(".pkl"):
+				os.remove(os.path.join(".", item))
 
 	if args.trainset_only is True and (args.stop != None or args.show_only is False):
 		print("\033[93mOptions --trainset_only and --stop | --show_only are not compatible.\033[0m")
@@ -286,10 +294,10 @@ if __name__ == "__main__":
 		# Retrieve model from pickle file
 		try:
 			model = None
-			with open(args.name, 'rb') as inp:
+			with open(args.name + ".pkl", 'rb') as inp:
 				model = pickle.load(inp)
 		except:
-			print("\033[93mCan't retrieve model object in {} file\033[0m".format(args.name))
+			print("\033[93mCan't retrieve model object in {}.pkl file\033[0m".format(args.name))
 			exit(1)
 		prediction = model.prediction(datas.T)
 		prediction_labels = np.select([prediction == 0, prediction == 1], ['B' , 'M'], prediction).astype(str)

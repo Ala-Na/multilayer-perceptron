@@ -232,7 +232,7 @@ class SimpleNeuralNetwork():
 
 	def save_model(self) -> None:
 		''' Save model in a pickle file. '''
-		with open(self.name, 'wb') as outp:
+		with open(self.name + ".pkl", 'wb') as outp:
 			pickle.dump(self, outp, pickle.HIGHEST_PROTOCOL)
 
 	def fit(self, nb_iterations: int = 10000) -> dict:
