@@ -123,6 +123,7 @@ class SimpleNeuralNetwork():
 			layer.alpha = self.alpha
 			if regularization is not None:
 				layer.lambda_ = self.lambda_
+				layer.regularization = regularization
 			layer.beta_1 = self.beta_1
 			layer.beta_2 = self.beta_2
 			layer.epsilon = self.epsilon
@@ -151,6 +152,7 @@ class SimpleNeuralNetwork():
 		weights_reg = 0
 		for layer in self.layers:
 			weights_reg += np.sum(np.square(layer.weights))
+		print("cst reg and wieghts reg", cst_reg, weights_reg)
 		return cst_reg * weights_reg
 
 	def binary_cross_entropy_loss(self, Y: np.ndarray = None, \
@@ -171,8 +173,10 @@ class SimpleNeuralNetwork():
 		else:
 			Y_pred = np.clip(np.argmax(Y_pred, axis=0), eps, 1. - eps)
 		cost = -np.mean((1 - Y) * np.log(1 - Y_pred) + Y * np.log(Y_pred), axis=0)
+		print("cost pre reg", cost)
 		if self.lambda_ != 0:
 			cost += self.regularization_cost()
+		print(cost)
 		cost_val = None
 		if val == True and isinstance(self.X_val, np.ndarray) \
 			and isinstance(self.Y_val, np.ndarray):

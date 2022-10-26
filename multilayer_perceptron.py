@@ -13,6 +13,7 @@ from matplotlib.lines import Line2D
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser("Multilayer Perceptron - Program")
+	parser.add_argument("--dataset", type=str, default="data.csv", help="Optional. Dataset to train on. Default value: 'data.csv'.")
 	parser.add_argument("--seed", type=int, help="Optional. Set seed for random draw.")
 	parser.add_argument("--metrics", nargs="+", default=[], choices=['accuracy', 'precision', 'recall', 'f1'], type=str, help="Optional. Metrics to display other than loss. Available options: accuracy, precision, recall and f1.")
 	parser.add_argument("--trainset_only", action='store_true', default=False, help="Optional. No creation of a validation set. Set to false by default.")
@@ -22,12 +23,16 @@ if __name__ == "__main__":
 	parser.add_argument("--alpha", type=float, default=0.001, help="Optional. Choice of learning rate alpha.")
 	parser.add_argument("--name", type=str, default="Model", help="Optional. File model name when saved or file name to open.")
 	parser.add_argument("--stop", type=int, default=None, help="Optional. Implement early stopping comparing validation set and training set losses, on stop value threshold (stop training when val_loss increase or is stable on stop value epochs). Set to None by default (no eraly stopping). Won't work if --trainset_only is activated.")
-	parser.add_argument("--lambda_", type=float, default=1., help="Optional. Implement regularization on all layers by lambda value (must be between 0 and 1). Prevent overfitting.")
+	parser.add_argument("--lambda_", type=float, default=0.5, help="Optional. Implement regularization on all layers by lambda value (must be between 0 and 1). Prevent overfitting.")
 	parser.add_argument("--show_all", action='store_true', default=False, help="Optional. Show all models saved in experiments.csv on a graph. Set to false by default.")
 	parser.add_argument("--show_only", action='store_true', default=False, help="Optional. Only show models saved in experiments.csv on a graph. No training performed. Set to false by default.")
 	parser.add_argument("--predict", type=str, default=None, help="Optional. Set program in prediction mode. A dataset's path to perform a prediction on must be given. Use --name option to set model to use.")
 	parser.add_argument("--reset", action='store_true', default=False, help="Optional. Only show models saved in experiments.csv on a graph. No training performed. Set to false by default.")
+	parser.add_argument("--reg", choices=['l2', 'None'], type=str, default='l2', help="Optional. Activate regularization to avoid overfitting.")
 	args = parser.parse_args()
+
+	if args.reg == 'None':
+		args.reg = None
 
 	if args.reset is True:
 		os.remove("experiments.csv")
@@ -36,7 +41,7 @@ if __name__ == "__main__":
 			if item.endswith(".pkl"):
 				os.remove(os.path.join(".", item))
 
-	if args.trainset_only is True and (args.stop != None or args.show_only is False):
+	if args.trainset_only is True and (args.stop != None or args.show_only is True):
 		print("\033[93mOptions --trainset_only and --stop | --show_only are not compatible.\033[0m")
 		exit(1)
 	elif args.show_all is True and args.show_only is True:
@@ -44,14 +49,18 @@ if __name__ == "__main__":
 		exit(1)
 	elif args.predict != None and (len(args.metrics) > 0 \
 		or args.trainset_only is True or args.epochs is True or args.opti != None \
-		or args.stop != None or args.lambda_ != 1. or args.show_all is True \
+		or args.stop != None or args.show_all is True \
 		or args.show_only is True):
 		print("\033[93mOptions --predict is only compatible with --name option.\033[0m")
 		exit(1)
 
 	if args.predict is None and args.show_only == False:
 		# First, retrieve labels nd data from .csv file
-		df = pd.read_csv("data.csv", header=None, index_col=0)
+		try:
+			df = pd.read_csv(args.dataset, header=None, index_col=0)
+		except:
+			print("\033[93mCan't open {} file\033[0m".format(args.predict))
+			exit(1)
 		labels = df.iloc[:, 0]
 		datas = df.iloc[:, 1:]
 		if df.isnull().values.any():
@@ -90,7 +99,7 @@ if __name__ == "__main__":
 				denses.append(DenseLayer(args.dim[i - 1], dim, activation='relu', initialization='he', seed= args.seed))
 		print("Layer {}:\ninput dim = {} | output dim = 2 | activation = softmax\n-------------------\n".format(len(args.dim) + 1, args.dim[-1]))
 		denses.append(DenseLayer(args.dim[-1], 2, final=True, activation='softmax', initialization='xavier', seed= args.seed))
-		model = SimpleNeuralNetwork(denses, x_train, y_train, x_val, y_val, name=args.name, optimization=args.opti, alpha=args.alpha, metrics=args.metrics, stop=args.stop, lambda_=args.lambda_)
+		model = SimpleNeuralNetwork(denses, x_train, y_train, x_val, y_val, name=args.name, optimization=args.opti, alpha=args.alpha, metrics=args.metrics, stop=args.stop, lambda_=args.lambda_, regularization=args.reg)
 		history = model.fit(args.epochs)
 
 		# Save model in .csv
@@ -304,6 +313,7 @@ if __name__ == "__main__":
 		prediction_labels = np.select([prediction == 0, prediction == 1], ['B' , 'M'], prediction).astype(str)
 
 		print('Prediction for {} elements:\n'.format(len(prediction_labels)), prediction_labels, '\n')
+		print(labels)
 		metrics = Metrics(labels_nbr, prediction)
 		print('=> Loss: {:5.3f}'.format(loss))
 		print('=> Accuracy: {:5.2f} | Precision: {:5.2f} | Recall: {:5.2f} | F1 score: {:5.2f}'.format(metrics.accuracy() * 100, metrics.precision() * 100, \
