@@ -153,22 +153,29 @@ class SimpleNeuralNetwork():
 			weights_reg += np.sum(np.square(layer.weights))
 		return cst_reg * weights_reg
 
-	def binary_cross_entropy_loss(self) -> float:
+	def binary_cross_entropy_loss(self, Y: np.ndarray = None, \
+		Y_pred: np.ndarray = None) -> float:
 		''' Calculus of cost = loss (difference) on all	predicted
 		(A_last for last layer activation) and expected outputs (Y)
 		for binary classification '''
 		eps = 1e-15 # to avoid log(0)
 		L = len(self.layers)
+		val = False
 		assert self.layers[L - 1].activation_name == 'sigmoid' \
 			or self.layers[L - 1].activation_name == 'softmax'
-		A_last = self.infos["A" + str(L)] # last activation value (= prediction)
-		Y_pred = np.clip(np.argmax(A_last, axis=0), eps, 1. - eps)
-		Y = np.argmax(self.Y, axis=0)
+		if Y is None or Y_pred is None:
+			A_last = self.infos["A" + str(L)] # last activation value (= prediction)
+			Y_pred = np.clip(np.argmax(A_last, axis=0), eps, 1. - eps)
+			Y = np.argmax(self.Y, axis=0)
+			val = True
+		else:
+			Y_pred = np.clip(np.argmax(Y_pred, axis=0), eps, 1. - eps)
 		cost = -np.mean((1 - Y) * np.log(1 - Y_pred) + Y * np.log(Y_pred), axis=0)
 		if self.lambda_ != 0:
 			cost += self.regularization_cost()
 		cost_val = None
-		if isinstance(self.X_val, np.ndarray) and isinstance(self.Y_val, np.ndarray):
+		if val == True and isinstance(self.X_val, np.ndarray) \
+			and isinstance(self.Y_val, np.ndarray):
 			A_last_val = self.forward_propagation(val=True)
 			Y_pred_val = np.clip(np.argmax(A_last_val, axis=0), eps, 1. - eps)
 			Y_val = np.argmax(self.Y_val, axis=0)
@@ -177,20 +184,27 @@ class SimpleNeuralNetwork():
 				cost_val += self.regularization_cost()
 		return np.squeeze(cost), np.squeeze(cost_val)
 
-	def cross_entropy_loss(self) -> float:
+	def cross_entropy_loss(self, Y: np.ndarray = None, \
+		Y_pred: np.ndarray = None) -> float:
 		''' Calculus of cost = loss (difference) on all	predicted
 		(A_last for last layer activation) and expected outputs (Y)
 		for multi-classes classification '''
 		eps = 1e-15 # to avoid log(0)
 		L = len(self.layers)
+		val = False
 		assert self.layers[L - 1].activation_name == 'softmax'
-		A_last = self.infos["A" + str(L)] # last activation value (= prediction)
-		m = A_last.shape[1]
-		cost = -np.sum(self.Y * np.log(np.clip(A_last, eps, 1. - eps))) / m
+		if Y is None or Y_pred is None:
+			A_last = self.infos["A" + str(L)] # last activation value (= prediction)
+			Y_pred = np.clip(np.argmax(A_last, axis=0), eps, 1. - eps)
+			Y = np.argmax(self.Y, axis=0)
+			val = True
+		m = Y.shape[1]
+		cost = -np.sum(self.Y * np.log(Y_pred)) / m
 		if self.lambda_ != 0:
 			cost += self.regularization_cost()
 		cost_val = None
-		if isinstance(self.X_val, np.ndarray) and isinstance(self.Y_val, np.ndarray):
+		if val == True and isinstance(self.X_val, np.ndarray) and \
+			isinstance(self.Y_val, np.ndarray):
 			A_last_val = self.forward_propagation(val=True)
 			cost_val = -np.sum(self.Y_val * np.log(np.clip(A_last_val, eps, 1. - eps))) / m
 			if self.lambda_ != 0:
@@ -320,10 +334,12 @@ class SimpleNeuralNetwork():
 			"prec": prec, "val_prec": val_prec, "rec": rec, "val_rec": val_rec, \
 			"f1": f1, "val_f1": val_f1} # historique
 
-	def prediction(self, to_predict: np.ndarray) -> np.ndarray:
+	def prediction(self, to_predict: np.ndarray, targets: np.ndarray) -> np.ndarray:
 		''' Perform prediction of an array. '''
 		layers_activations = [to_predict]
 		for i, layer in enumerate(self.layers):
 			A, _ = layer.forward(layers_activations[i])
 			layers_activations.append(A)
-		return np.argmax(A, axis=0)
+		pred = np.argmax(A, axis=0)
+		loss, _ = self.loss(pred, targets)
+		return pred, loss
