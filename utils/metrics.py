@@ -43,14 +43,16 @@ class Metrics():
 		assert isinstance(pos_label, int) or isinstance(pos_label, str)
 		truePos = np.sum((self.y == pos_label) & (self.y_hat == pos_label))
 		falsePos = np.sum((self.y != pos_label) & (self.y_hat == pos_label))
-		return truePos / (truePos + falsePos)
+		div = np.clip(truePos + falsePos, 1e-15, None)
+		return truePos / (div)
 
 	def recall(self, pos_label=1) -> float:
 		'''Compute the recall score. '''
 		assert isinstance(pos_label, int) or isinstance(pos_label, str)
 		truePos = np.sum((self.y == pos_label) & (self.y_hat == pos_label))
 		falseNeg = np.sum((self.y == pos_label) & (self.y_hat != pos_label))
-		return truePos / (truePos + falseNeg)
+		div = np.clip(truePos + falseNeg, 1e-15, None)
+		return truePos / (div)
 
 	def f1_score(self, pos_label=1):
 		'''Compute the F1 score. '''
@@ -59,3 +61,4 @@ class Metrics():
 		recall = self.recall(pos_label)
 		div = np.clip(precision + recall, 1e-15, None)
 		return (2 * precision * recall) / (div)
+
