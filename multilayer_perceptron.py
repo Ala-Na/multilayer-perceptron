@@ -313,7 +313,6 @@ if __name__ == "__main__":
 		prediction_labels = np.select([prediction == 0, prediction == 1], ['B' , 'M'], prediction).astype(str)
 
 		print('Prediction for {} elements:\n'.format(len(prediction_labels)), prediction_labels, '\n')
-		print(labels)
 		metrics = Metrics(labels_nbr, prediction)
 		print('=> Loss: {:5.3f}'.format(loss))
 		print('=> Accuracy: {:5.2f} | Precision: {:5.2f} | Recall: {:5.2f} | F1 score: {:5.2f}'.format(metrics.accuracy() * 100, metrics.precision() * 100, \

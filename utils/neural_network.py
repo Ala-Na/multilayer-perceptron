@@ -152,7 +152,6 @@ class SimpleNeuralNetwork():
 		weights_reg = 0
 		for layer in self.layers:
 			weights_reg += np.sum(np.square(layer.weights))
-		print("cst reg and wieghts reg", cst_reg, weights_reg)
 		return cst_reg * weights_reg
 
 	def binary_cross_entropy_loss(self, Y: np.ndarray = None, \
@@ -167,16 +166,19 @@ class SimpleNeuralNetwork():
 			or self.layers[L - 1].activation_name == 'softmax'
 		if Y is None or Y_pred is None:
 			A_last = self.infos["A" + str(L)] # last activation value (= prediction)
-			Y_pred = np.clip(np.argmax(A_last, axis=0), eps, 1. - eps)
-			Y = np.argmax(self.Y, axis=0)
+			Y_pred = np.clip(A_last, eps, 1. - eps)
 			val = True
 		else:
-			Y_pred = np.clip(np.argmax(Y_pred, axis=0), eps, 1. - eps)
-		cost = -np.mean((1 - Y) * np.log(1 - Y_pred) + Y * np.log(Y_pred), axis=0)
-		print("cost pre reg", cost)
+			Y_pred = np.clip(Y_pred, eps, 1. - eps)
+		#cost = -np.mean((1 - Y) * np.log(1 - Y_pred) + Y * np.log(Y_pred), axis=1)
+		#print(cost)
+		print("Y")
+		print(Y[Y==1])
+		print("-----")
+		print(Y_pred)
+		cost = -(1/Y.shape[1]) * np.sum(Y * np.log(Y_pred) + (1 - Y) * np.log(1 - Y_pred))
 		if self.lambda_ != 0:
 			cost += self.regularization_cost()
-		print(cost)
 		cost_val = None
 		if val == True and isinstance(self.X_val, np.ndarray) \
 			and isinstance(self.Y_val, np.ndarray):
@@ -317,8 +319,8 @@ class SimpleNeuralNetwork():
 					val_f1.append(metrics.f1_score())
 					if display:
 						print(" - val_f1: {:3.2f}".format(val_f1[i] * 100), end='')
-				if display:
-					print(end='\n')
+			if display:
+				print(end='\n')
 			if self.stop is not None:
 				if val_loss is not None and (best_val_loss is None or round(best_val_loss, 6) > round(val_loss, 6)):
 					best_val_loss, best_val_epoch = val_loss, i
@@ -345,5 +347,5 @@ class SimpleNeuralNetwork():
 			A, _ = layer.forward(layers_activations[i])
 			layers_activations.append(A)
 		pred = np.argmax(A, axis=0)
-		loss, _ = self.loss(pred, targets)
+		loss, _ = self.loss(targets, A)
 		return pred, loss
