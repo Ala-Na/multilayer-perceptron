@@ -299,6 +299,7 @@ if __name__ == "__main__":
 		datas = datas.to_numpy(dtype=np.dtype(float))
 		datas, _, _ = scaler(datas, 'robust')
 		labels_nbr = np.select([labels =='B', labels == 'M'], [0 , 1], labels).astype(int)
+		print(labels_nbr)
 		one_hot_labels = one_hot_class_encoder(labels_nbr, 2)
 
 		# Retrieve model from pickle file
@@ -313,7 +314,7 @@ if __name__ == "__main__":
 		prediction_labels = np.select([prediction == 0, prediction == 1], ['B' , 'M'], prediction).astype(str)
 
 		print('Prediction for {} elements:\n'.format(len(prediction_labels)), prediction_labels, '\n')
-		metrics = Metrics(labels_nbr, prediction)
+		metrics = Metrics(prediction, labels_nbr)
 		print('=> Loss: {:5.3f}'.format(loss))
 		print('=> Accuracy: {:5.2f} | Precision: {:5.2f} | Recall: {:5.2f} | F1 score: {:5.2f}'.format(metrics.accuracy() * 100, metrics.precision() * 100, \
 			metrics.recall() * 100, metrics.f1_score() * 100))

@@ -155,7 +155,7 @@ class SimpleNeuralNetwork():
 		return cst_reg * weights_reg
 
 	def binary_cross_entropy_loss(self, Y: np.ndarray = None, \
-		Y_pred: np.ndarray = None) -> float:
+		Y_pred: np.ndarray = None, reg: bool = True) -> float:
 		''' Calculus of cost = loss (difference) on all	predicted
 		(A_last for last layer activation) and expected outputs (Y)
 		for binary classification '''
@@ -168,52 +168,56 @@ class SimpleNeuralNetwork():
 			A_last = self.infos["A" + str(L)] # last activation value (= prediction)
 			Y_pred = np.clip(A_last, eps, 1. - eps)
 			val = True
+			Y = self.Y
 		else:
 			Y_pred = np.clip(Y_pred, eps, 1. - eps)
-		#cost = -np.mean((1 - Y) * np.log(1 - Y_pred) + Y * np.log(Y_pred), axis=1)
-		#print(cost)
-		print("Y")
-		print(Y[Y==1])
-		print("-----")
-		print(Y_pred)
-		cost = -(1/Y.shape[1]) * np.sum(Y * np.log(Y_pred) + (1 - Y) * np.log(1 - Y_pred))
-		if self.lambda_ != 0:
+		Y = np.argmax(Y, axis=0)
+		Y_pred = Y_pred.T
+		cost = (1 / Y_pred.shape[0]) * np.sum(-np.log(Y_pred[range(Y_pred.shape[0]), Y]))
+		print(cost)
+		if reg == True and self.lambda_ != 0:
 			cost += self.regularization_cost()
 		cost_val = None
 		if val == True and isinstance(self.X_val, np.ndarray) \
 			and isinstance(self.Y_val, np.ndarray):
 			A_last_val = self.forward_propagation(val=True)
-			Y_pred_val = np.clip(np.argmax(A_last_val, axis=0), eps, 1. - eps)
-			Y_val = np.argmax(self.Y_val, axis=0)
-			cost_val = -np.mean((1 - Y_val) * np.log(1 - Y_pred_val) + Y_val * np.log(Y_pred_val), axis=0)
-			if self.lambda_ != 0:
+			Y_pred_val = np.clip(A_last_val, eps, 1. - eps).T
+			Y_val = self.Y_val.T
+			cost_val = -1.0 * np.mean(np.sum(Y_val * np.log(Y_pred_val), axis=1))
+			if reg == True and self.lambda_ != 0:
 				cost_val += self.regularization_cost()
 		return np.squeeze(cost), np.squeeze(cost_val)
 
 	def cross_entropy_loss(self, Y: np.ndarray = None, \
-		Y_pred: np.ndarray = None) -> float:
+		Y_pred: np.ndarray = None, reg: bool = True) -> float:
 		''' Calculus of cost = loss (difference) on all	predicted
 		(A_last for last layer activation) and expected outputs (Y)
 		for multi-classes classification '''
 		eps = 1e-15 # to avoid log(0)
 		L = len(self.layers)
 		val = False
-		assert self.layers[L - 1].activation_name == 'softmax'
+		assert self.layers[L - 1].activation_name == 'sigmoid' \
+			or self.layers[L - 1].activation_name == 'softmax'
 		if Y is None or Y_pred is None:
 			A_last = self.infos["A" + str(L)] # last activation value (= prediction)
-			Y_pred = np.clip(np.argmax(A_last, axis=0), eps, 1. - eps)
-			Y = np.argmax(self.Y, axis=0)
+			Y_pred = np.clip(A_last, eps, 1. - eps)
 			val = True
-		m = Y.shape[1]
-		cost = -np.sum(self.Y * np.log(Y_pred)) / m
-		if self.lambda_ != 0:
+			Y = self.Y
+		else:
+			Y_pred = np.clip(Y_pred, eps, 1. - eps)
+		Y = Y.T
+		Y_pred = Y_pred.T
+		cost = -1.0 * np.mean(np.sum(Y * np.log(Y_pred), axis=1))
+		if reg == True and self.lambda_ != 0:
 			cost += self.regularization_cost()
 		cost_val = None
-		if val == True and isinstance(self.X_val, np.ndarray) and \
-			isinstance(self.Y_val, np.ndarray):
+		if val == True and isinstance(self.X_val, np.ndarray) \
+			and isinstance(self.Y_val, np.ndarray):
 			A_last_val = self.forward_propagation(val=True)
-			cost_val = -np.sum(self.Y_val * np.log(np.clip(A_last_val, eps, 1. - eps))) / m
-			if self.lambda_ != 0:
+			Y_pred_val = np.clip(A_last_val, eps, 1. - eps).T
+			Y_val = self.Y_val.T
+			cost_val = -1.0 * np.mean(np.sum(Y_val * np.log(Y_pred_val), axis=1))
+			if reg == True and self.lambda_ != 0:
 				cost_val += self.regularization_cost()
 		return np.squeeze(cost), np.squeeze(cost_val)
 
@@ -340,12 +344,13 @@ class SimpleNeuralNetwork():
 			"prec": prec, "val_prec": val_prec, "rec": rec, "val_rec": val_rec, \
 			"f1": f1, "val_f1": val_f1} # historique
 
-	def prediction(self, to_predict: np.ndarray, targets: np.ndarray) -> np.ndarray:
+	def prediction(self, prediction: np.ndarray, targets: np.ndarray) -> np.ndarray:
 		''' Perform prediction of an array. '''
-		layers_activations = [to_predict]
+		layers_activations = [prediction]
 		for i, layer in enumerate(self.layers):
 			A, _ = layer.forward(layers_activations[i])
 			layers_activations.append(A)
 		pred = np.argmax(A, axis=0)
-		loss, _ = self.loss(targets, A)
+		loss, _ = self.loss(targets, A, reg=False)
+		loss, _ = self.cross_entropy_loss(targets, A, reg=False)
 		return pred, loss
