@@ -18,7 +18,7 @@ if __name__ == "__main__":
 	parser.add_argument("--metrics", nargs="+", default=[], choices=['accuracy', 'precision', 'recall', 'f1'], type=str, help="Optional. Metrics to display other than loss. Available options: accuracy, precision, recall and f1.")
 	parser.add_argument("--trainset_only", action='store_true', default=False, help="Optional. No creation of a validation set. Set to false by default.")
 	parser.add_argument("--epochs", default=10000, type=int, help="Optional. Number of epochs to train our model on.")
-	parser.add_argument("--dim", default=[64, 32, 16, 16, 8], type=int, nargs="+", help="Optional. Set denses dimensions. Note that denses have always relu activation, except for final dense having softmax activation.")
+	parser.add_argument("--dim", default=[15, 8], type=int, nargs="+", help="Optional. Set denses dimensions. Note that denses have always relu activation, except for final dense having softmax activation.")
 	parser.add_argument("--opti", choices=[None, 'rmsprop', 'adam', 'momentum'], default=None, type=str, help="Optional. Choice of optimization algorithm.")
 	parser.add_argument("--alpha", type=float, default=0.001, help="Optional. Choice of learning rate alpha.")
 	parser.add_argument("--name", type=str, default="Model", help="Optional. File model name when saved or file name to open.")
@@ -78,6 +78,8 @@ if __name__ == "__main__":
 		# Cut into training/validation sets and scale x
 		if args.trainset_only == False:
 			x_train, x_val, y_train, y_val = subsets_creator(datas, one_hot_labels, 0.8, args.seed)
+			# To check sigmoid and binary cross entropy
+			# x_train, x_val, y_train, y_val = subsets_creator(datas, labels_nbr.reshape(-1, 1), 0.8, args.seed)
 			x_train, fqrt, tqrt = scaler(x_train, 'robust')
 			x_val, _, _ = scaler(x_val, 'robust', fqrt, tqrt)
 			x_train, x_val, y_train, y_val = x_train.T, x_val.T, y_train.T, y_val.T
@@ -99,6 +101,9 @@ if __name__ == "__main__":
 				denses.append(DenseLayer(args.dim[i - 1], dim, activation='relu', initialization='he', seed= args.seed))
 		print("Layer {}:\ninput dim = {} | output dim = 2 | activation = softmax\n-------------------\n".format(len(args.dim) + 1, args.dim[-1]))
 		denses.append(DenseLayer(args.dim[-1], 2, final=True, activation='softmax', initialization='xavier', seed= args.seed))
+		# To check sigmoid and binary cross entropy
+		# denses.append(DenseLayer(args.dim[-1], 1, final=True, activation='sigmoid', initialization='xavier', seed= args.seed))
+		# model = SimpleNeuralNetwork(denses, x_train, y_train, x_val, y_val, name=args.name, optimization=args.opti, alpha=args.alpha, metrics=args.metrics, stop=args.stop, lambda_=args.lambda_, regularization=args.reg, loss='binary_cross_entropy')
 		model = SimpleNeuralNetwork(denses, x_train, y_train, x_val, y_val, name=args.name, optimization=args.opti, alpha=args.alpha, metrics=args.metrics, stop=args.stop, lambda_=args.lambda_, regularization=args.reg)
 		history = model.fit(args.epochs)
 
@@ -299,7 +304,6 @@ if __name__ == "__main__":
 		datas = datas.to_numpy(dtype=np.dtype(float))
 		datas, _, _ = scaler(datas, 'robust')
 		labels_nbr = np.select([labels =='B', labels == 'M'], [0 , 1], labels).astype(int)
-		print(labels_nbr)
 		one_hot_labels = one_hot_class_encoder(labels_nbr, 2)
 
 		# Retrieve model from pickle file

@@ -2,8 +2,6 @@ from utils.activations import *
 import numpy as np
 from typing import Tuple
 
-#TODO check regularization
-
 class DenseLayer():
 	''' A dense model '''
 

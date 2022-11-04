@@ -20,6 +20,7 @@ class Metrics():
 		self.y = expected
 		self.y_hat = predicted
 
+
 	def set_expected(self, expected: np.ndarray) -> None:
 		''' Set only expected values. '''
 		assert isinstance(expected, np.ndarray) \

@@ -14,7 +14,7 @@ class SimpleNeuralNetwork():
 
 	def __init__(self, layers: list, X: np.ndarray, Y: np.ndarray, \
 		X_val: np.ndarray or None = None, Y_val: np.ndarray or None = None, \
-		alpha: float = 0.001, loss: str = 'binary_cross_entropy', \
+		alpha: float = 0.001, loss: str = 'cross_entropy', \
 		regularization: str = None, lambda_: float = 1.0, \
 		optimization: str or None = None, beta_1: float = 0.9, \
 		beta_2: float = 0.99, epsilon: float = 1e-8, \
@@ -67,7 +67,7 @@ class SimpleNeuralNetwork():
 		elif not isinstance(self.Y, np.ndarray) and self.Y.ndim == 2 and self.Y.size != 0:
 			print("\033[91mError in received output\033[0m")
 			return False
-		if loss == 'binary_cross_entropy' and self.Y.shape[0] != 2:
+		if loss == 'binary_cross_entropy' and len(np.unique(self.Y)) != 2:
 			print("\033[91mCan't use binary cross entropy loss on more than 2 classes\033[0m")
 			return False
 		if self.X_val is not None or self.Y_val is not None:
@@ -154,6 +154,13 @@ class SimpleNeuralNetwork():
 			weights_reg += np.sum(np.square(layer.weights))
 		return cst_reg * weights_reg
 
+	# Note : It's asked in the subject to use binary cross entropy loss
+	# BUT we must use softmax activation in output layer. Binary cross
+	# entropy loss is meant to be used if a sigmoid activation is used in
+	# output layer. I still wrote the code for it here.
+	# Difference in output : Sigmoid give a p probability to belongs to one
+	# unique class. Softmax give p1 p2 ... pN probability to belongs to each
+	# N classes by an exponential factor.
 	def binary_cross_entropy_loss(self, Y: np.ndarray = None, \
 		Y_pred: np.ndarray = None, reg: bool = True) -> float:
 		''' Calculus of cost = loss (difference) on all	predicted
@@ -162,28 +169,25 @@ class SimpleNeuralNetwork():
 		eps = 1e-15 # to avoid log(0)
 		L = len(self.layers)
 		val = False
-		assert self.layers[L - 1].activation_name == 'sigmoid' \
-			or self.layers[L - 1].activation_name == 'softmax'
+		assert self.layers[L - 1].activation_name == 'sigmoid'
 		if Y is None or Y_pred is None:
-			A_last = self.infos["A" + str(L)] # last activation value (= prediction)
-			Y_pred = np.clip(A_last, eps, 1. - eps)
+			Y_pred = self.infos["A" + str(L)] # last activation value (= prediction)
 			val = True
 			Y = self.Y
-		else:
-			Y_pred = np.clip(Y_pred, eps, 1. - eps)
-		Y = np.argmax(Y, axis=0)
-		Y_pred = Y_pred.T
-		cost = (1 / Y_pred.shape[0]) * np.sum(-np.log(Y_pred[range(Y_pred.shape[0]), Y]))
-		print(cost)
+		Y = Y.T
+		Y_pred = np.clip(Y_pred, eps, 1. - eps).T
+		Y_pred_opp = np.clip(1 - Y_pred, eps, 1. - eps)
+		cost = -(1.0 / Y.shape[0]) * np.sum(Y.T @ np.log(Y_pred) + (1 - Y).T @ np.log(Y_pred_opp))
 		if reg == True and self.lambda_ != 0:
 			cost += self.regularization_cost()
 		cost_val = None
 		if val == True and isinstance(self.X_val, np.ndarray) \
 			and isinstance(self.Y_val, np.ndarray):
 			A_last_val = self.forward_propagation(val=True)
-			Y_pred_val = np.clip(A_last_val, eps, 1. - eps).T
 			Y_val = self.Y_val.T
-			cost_val = -1.0 * np.mean(np.sum(Y_val * np.log(Y_pred_val), axis=1))
+			Y_pred_val = np.clip(A_last_val, eps, 1. - eps).T
+			Y_pred_val_opp = np.clip(1 - Y_pred_val, eps, 1. - eps)
+			cost_val = -(1.0 / Y_val.shape[0]) * np.sum(Y_val.T @ np.log(Y_pred_val) + (1 - Y_val).T @ np.log(Y_pred_val_opp))
 			if reg == True and self.lambda_ != 0:
 				cost_val += self.regularization_cost()
 		return np.squeeze(cost), np.squeeze(cost_val)
@@ -199,14 +203,11 @@ class SimpleNeuralNetwork():
 		assert self.layers[L - 1].activation_name == 'sigmoid' \
 			or self.layers[L - 1].activation_name == 'softmax'
 		if Y is None or Y_pred is None:
-			A_last = self.infos["A" + str(L)] # last activation value (= prediction)
-			Y_pred = np.clip(A_last, eps, 1. - eps)
+			Y_pred = self.infos["A" + str(L)] # last activation value (= prediction)
 			val = True
 			Y = self.Y
-		else:
-			Y_pred = np.clip(Y_pred, eps, 1. - eps)
 		Y = Y.T
-		Y_pred = Y_pred.T
+		Y_pred = np.clip(Y_pred, eps, 1. - eps).T
 		cost = -1.0 * np.mean(np.sum(Y * np.log(Y_pred), axis=1))
 		if reg == True and self.lambda_ != 0:
 			cost += self.regularization_cost()
@@ -285,7 +286,10 @@ class SimpleNeuralNetwork():
 				display = True
 			if display:
 				print("epoch {}/{} - loss: {:.3f}".format(i + 1, nb_iterations, self.losses[i]), end='')
-			metrics.set_values(np.argmax(self.Y, axis=0), np.argmax(self.infos["A" + str(L)], axis=0))
+			if self.layers[L - 1].activation_name == 'softmax':
+				metrics.set_values(np.argmax(self.Y, axis=0), np.argmax(self.infos["A" + str(L)], axis=0))
+			else:
+				metrics.set_values(self.Y, self.infos["A" + str(L)] >= 0.5)
 			if 'accuracy' in self.metrics:
 				acc.append(metrics.accuracy())
 				if display:
@@ -306,7 +310,10 @@ class SimpleNeuralNetwork():
 				if display:
 					print(" - val_loss: {:.3f}".format(self.val_losses[i]), end='')
 				A_last_val = self.forward_propagation(val=True)
-				metrics.set_values(np.argmax(self.Y_val, axis=0), np.argmax(A_last_val, axis=0))
+				if self.layers[L - 1].activation_name == 'softmax':
+					metrics.set_values(np.argmax(self.Y_val, axis=0), np.argmax(A_last_val, axis=0))
+				else:
+					metrics.set_values(self.Y_val, A_last_val >= 0.5)
 				if 'accuracy' in self.metrics:
 					val_acc.append(metrics.accuracy())
 					if display:
@@ -352,5 +359,4 @@ class SimpleNeuralNetwork():
 			layers_activations.append(A)
 		pred = np.argmax(A, axis=0)
 		loss, _ = self.loss(targets, A, reg=False)
-		loss, _ = self.cross_entropy_loss(targets, A, reg=False)
 		return pred, loss
