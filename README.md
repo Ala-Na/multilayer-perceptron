@@ -16,69 +16,89 @@ A 42 school project, from the machine learning / artificial intelligence branch.
 There's only one program : ```python3 multilayer_perceptron.py``` with multiples options.
 If not specified overwise, all options are compatible.
 
-### 📊 --dataset
+#### 📊 --dataset
 ```python3 multilayer_perceptron.py --dataset path_to_data```
 Option to specify the data path on which will be trained the model. Dataset path must be a valid ```.csv``` file with correct authorizations.
 Note that it need to follow the same format (presence of id as index, labels either 'M' or 'B', same number of numerical features) as the default option ```data.csv``` to be functional.
 
-### 🌾 --seed
+#### 🌾 --seed
 ```python3 multilayer_perceptron.py --seed number```
 ```number``` must be a valid integer. 
 Randomness is used to initialize each neural layer. Using this option allow the user to get reproductible results (same weights if seed is kept).
 By default, no seed is set.
 
-### 📏 --metrics
+#### 📏 --metrics
 ```python3 multilayer_perceptron.py --metrics accuracy precision recall f1```
 By default, only categorical cross entropy loss is displayed (both in terminal and in a final schema) and kept track of.
 User can choose to display more metrics (on terminal and final schema) with this option. One or a combinaison of ```accuracy```, ```precision```, ```recall``` or ```f1``` (for F1 score) can be used.
 
-### 🚅 --trainset_only
+#### 🚅 --trainset_only
 ```python3 multilayer_perceptron.py --trainset_only```
 By default, the dataset is cut in both training set (80% of dataset, to train model on) and validation set (20%, to see if model generalize well or not and not used for training) and metrics are display for both.
 If this option is set, the cut isn't happening and model will be trained on all dataset.
 Non compatible with ```--stop``` and ```--show_only``` options.
 
-### ↩️ --epochs
+#### ↩️ --epochs
 ```python3 multilayer_perceptron.py --epochs number```
 ```number``` must be a valid positive integer. 
 Number of iterations/epochs on which the model is trained. An epoch comprise a forward propagation and a backward propagation (with weights update).
 By default, 10000 epochs are performed.
 
-### 📐 --dim
+#### 📐 --dim
 ```python3 multilayer_perceptron.py --dim number_1 ... number_n```
 ```number_1 ... number_n``` must be valid positive integers, separated by spaces.
 Option to set the hidden layers dimensions of the model. By default, an architecture with 2 hiddens layers of respectively 15 and 8 units is used.
 Note that all those hidden layers will use a ReLU activation function.
 
-## 📈 --opti
+#### 📈 --opti
 ```python3 multilayer_perceptron.py --opti optimization_algorithm```
 ```optimization algorithm``` must either be ```rmsprop```, ```adam``` or ```momentum```. Each option correspond to the equivalent algorithm and will be applied to the full neural network.
 By default, no optimization algorithm is used.
 
-### 🔱 --alpha
+#### 🔱 --alpha
 ```python3 multilayer_perceptron.py --alpha number```
 ```number``` must be a valid positive float included between 0 and 1. 
 Choice of learning rate hyperparameter (value by which weights are proportionally updated). By default, alpha is set to 0.001.
 
-### 📛 --name
+#### 📛 --name
 ```python3 multilayer_perceptron.py --name name```
 ```name``` must be a string.
 Upon training, models are saved under pickle format. By default, the name is ```Model``` and a corresponding ```Model.pkl``` is created. This can be modified by this option.
 Note that if used with ```---predict``` option, ```--name``` will correspond to the ```.pkl``` file from which the trained model will be retrieved.
 
-### ✋ --stop
+#### ✋ --stop
 ```python3 multilayer_perceptron.py --stop number```
 ```number``` must be a valid positive integer.
 This option implement early stopping. Validation set loss in compared with it's previous best value (lower) after at least ```number``` epochs back. If an increase between previous and current value is seen, it may be because of a phenomenon called overfitting (model can't generalize well). Model go back to previous state where the smaller validation loss was met ad training stops.
 Non compatible with ```--trainset_only``` option.
 
-### 🏺 --lambda_
+#### 🏺 --lambda_
 ```python3 multilayer_perceptron.py --lambda_ number```
 ```number``` must be a valid positive float included between 0 and 1.
 Regularization is a way to prevent overfitting (model not able to generalize to data it wasn't trained on).
 If regularization is performed, it's factor (extent) must be set by this regularization factor. 
 By default, L2 regularization is performed and ```lambda_``` is set to 0.5.
 
+
+#### 🗠 --show_all
+```python3 multilayer_perceptron.py --show_all```
+By default, after training, a final schema of displayed metrics evolution is shown.
+If this option is set, training is not happening and all metrics evolution of previously trained models (saved in ```experiments.csv```) are displayed on a schema.
+Won't display anything if ```experiments.csv``` is not present, have incorrect rights or is not under expected format.
+This option may present some python exceptions.
+Non compatible with ```--show_only``` option.
+
+#### 📉 --show_only
+```python3 multilayer_perceptron.py --show_only```
+By default, after training, a final schema of displayed metrics evolution is shown.
+If this option is set, an additionnal schema of all metrics evolution of previously trained models (saved in ```experiments.csv```) is displayed.
+Won't display anything if ```experiments.csv``` is not present, have incorrect rights or is not under expected format.
+This option may present some python exceptions.
+Non compatible with ```--show_all``` option.
+
+#### 🔮 --predict
+```python3 multilayer_perceptron.py --predict```
+Non compatible with all options except ```--name--```option.
 
 
 <p align='center'>
