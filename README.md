@@ -17,9 +17,9 @@ There's only one program : ```python3 multilayer_perceptron.py``` with multiples
 If not specified overwise, all options are compatible.
 
 #### 📊 --dataset
-```python3 multilayer_perceptron.py --dataset path_to_data```
-Option to specify the data path on which will be trained the model. Dataset path must be a valid ```.csv``` file with correct authorizations.
-Note that it need to follow the same format (presence of id as index, labels either 'M' or 'B', same number of numerical features) as the default option ```data.csv``` to be functional.
+>```python3 multilayer_perceptron.py --dataset path_to_data```
+>Option to specify the data path on which will be trained the model. Dataset path must be a valid ```.csv``` file with correct authorizations.
+>Note that it need to follow the same format (presence of id as index, labels either 'M' or 'B', same number of numerical features) as the default option ```data.csv``` to be functional.
 
 #### 🌾 --seed
 ```python3 multilayer_perceptron.py --seed number```
