@@ -124,16 +124,6 @@ A ```SimpleNeuralNetwork``` class is present, which is a multilayer perceptron i
 ```DenseLayer``` is defined by multiple parameters (feel free to look at its implementation), including its activation function. By default, the activation function of all hidden layers was ReLU and the output layer activation was softmax in ```multilayer_perceptron.py``` program. But those parameters can be modified at ```DenseLayer``` intialization. Algorithm for forward and backward propagation, as well as update, are both presents in ```DenseLayer``` object (for one layer) and ```SimpleNeuralNetwork``` object (for all layers, calling methods of layers).
 Though only a set of those objects parameters are modified in the main program, a lot of others options are available. Look it up !
 
-<p align='center'>
- <img width= '350' align='center' src='https://user-images.githubusercontent.com/67599180/194900103-66c28466-2930-44a4-94c8-d0f003784cdd.gif' alt='animated'>
-</p>[Screencast from 11-08-2022 03:45:19 PM.webm](https://user-images.githubusercontent.com/67599180/200595286-36ea5c9d-93a6-4079-a772-38487d1ca209.webm)
-
-
-<p align='center'>
- <i align='center'>Project screen cast example</i>
-</p>
-
-
 ## Language used
 Python :snake:
 <i>
