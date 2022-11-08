@@ -27,7 +27,7 @@ if __name__ == "__main__":
 	parser.add_argument("--show_all", action='store_true', default=False, help="Optional. Show all models saved in experiments.csv on a graph. Set to false by default.")
 	parser.add_argument("--show_only", action='store_true', default=False, help="Optional. Only show models saved in experiments.csv on a graph. No training performed. Set to false by default.")
 	parser.add_argument("--predict", type=str, default=None, help="Optional. Set program in prediction mode. A dataset's path to perform a prediction on must be given. Use --name option to set model to use.")
-	parser.add_argument("--reset", action='store_true', default=False, help="Optional. Only show models saved in experiments.csv on a graph. No training performed. Set to false by default.")
+	parser.add_argument("--reset", action='store_true', default=False, help="Optional. Delete experiments.csv and all .pkl files. Set to false by default.")
 	parser.add_argument("--reg", choices=['l2', 'None'], type=str, default='l2', help="Optional. Activate regularization to avoid overfitting.")
 	args = parser.parse_args()
 
