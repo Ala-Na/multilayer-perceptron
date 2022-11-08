@@ -104,7 +104,7 @@ If not specified overwise, all options are compatible.
 >Non compatible with all options except ```--name--```option.
 
 #### 🧹 --reset
->```python3 multilayer_perceptron.py --reset```
+```python3 multilayer_perceptron.py --reset```
 >If set, delete ```experiments.csv``` file and all saved models in ```.pkl``` files at program launch.
 
 #### 🚨 --reg
