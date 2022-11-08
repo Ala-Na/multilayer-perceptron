@@ -118,6 +118,12 @@ If set to ```None```, no regularization will be performed.
 During evaluation, this script was launched multiple times and loss was compared to a point scale.
 Note that model performance can be altered by the randomness of the testing set generated. That's why multiple prediction on differents testing set are performed.
 
+## Words on neural network implementation
+I choose to make a "modular" implementation of neural network.
+A ```SimpleNeuralNetwork``` class is present, which is a multilayer perceptron implementation containing a multiple number of ```DenseLayer``` class elements.
+```DenseLayer``` is defined by multiple parameters (feel free to look at its implementation), including its activation function. By default, the activation function of all hidden layers was ReLU and the output layer activation was softmax in ```multilayer_perceptron.py``` program. But those parameters can be modified at ```DenseLayer``` intialization. Algorithm for forward and backward propagation, as well as update, are both presents in ```DenseLayer``` object (for one layer) and ```SimpleNeuralNetwork``` object (for all layers, calling methods of layers).
+Though only a set of those objects parameters are modified in the main program, a lot of others options are available. Look it up !
+
 <p align='center'>
  <img width= '350' align='center' src='https://user-images.githubusercontent.com/67599180/194900103-66c28466-2930-44a4-94c8-d0f003784cdd.gif' alt='animated'>
 </p>
