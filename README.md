@@ -97,9 +97,26 @@ This option may present some python exceptions.
 Non compatible with ```--show_all``` option.
 
 #### 🔮 --predict
-```python3 multilayer_perceptron.py --predict```
+```python3 multilayer_perceptron.py --predict path_to_data```
+By default, program perform training. If this option is set, it'll perform prediction instead on the dataset indicated by ```path_to_data```. Dataset path must be a valid ```.csv``` file with correct authorizations.
+Note that it need to follow the same format (presence of id as index, labels either 'M' or 'B', same number of numerical features) as the default option ```data.csv``` to be functional.
+Predicted labels are displayed, as well as the loss and others metrics (accuracy, precision, recall, F1 score).
 Non compatible with all options except ```--name--```option.
 
+#### 🧹 --reset
+```python3 multilayer_perceptron.py --reset```
+If set, delete ```experiments.csv``` file and all saved models in ```.pkl``` files at program launch.
+
+#### 🚨 --reg
+```python3 multilayer_perceptron.py --reg regularization```
+```regularization``` must be either ```l2``` or ```None```.
+By default, set to ```l2```, which will make model perform regularization (a way to limit a phenomenon called overfitting, where model can't generalize well on data it wasn't trained on). Must be used with a ```--lambda_``` option different of 0.0.
+If set to ```None```, no regularization will be performed.
+
+## Additional program
+```evaluation.py``` is a program generating randomly a ```data_traning.csv``` and ```data_test.csv``` from a remote data set hosted on 42 website. This set is the same as ```data.csv```.
+During evaluation, this script was launched multiple times and loss was compared to a point scale.
+Note that model performance can be altered by the randomness of the testing set generated. That's why multiple prediction on differents testing set are performed.
 
 <p align='center'>
  <img width= '350' align='center' src='https://user-images.githubusercontent.com/67599180/194900103-66c28466-2930-44a4-94c8-d0f003784cdd.gif' alt='animated'>
@@ -109,20 +126,6 @@ Non compatible with all options except ```--name--```option.
  <i align='center'>Project screen capture of interactive mode</i>
 </p>
 
-### 🧮 describe.py
-```python3 describe.py dataset_filepath```
-
-A program which take as argument the filepath to a dataset to analyze and output corresponding statistical informations.
-The goal is to reproduce the describe function of sklearn.
-Statistical informations displayed: Count, mean, standard deviation, minimum, first quartile, median, third quartile, maximum, mode, range, interquartile range and number of outliers.
-
-### 📊 histogram.py
-```python3 histogram.py```
-```python3 histogram.py -expl```
-
-A program to display an histogram of marks distribution for each subject and each Hogwarts house.
-The goal was to answer the question "Which subject at Hogwarts is homogeneously distributed between the four houses ?".
-With ```-expl``` argument, explanations from the interactive scenario are displayed. 
 
 <p align='center'>
  <img width= '700' align='center' src='https://user-images.githubusercontent.com/67599180/194900426-d29fa66b-db50-44ab-8f6b-80a02d745a35.png' alt='animated'>
@@ -131,86 +134,8 @@ With ```-expl``` argument, explanations from the interactive scenario are displa
  <i align='center'>Project screen shot</i>
 </p>
 
-### 📏 scatter_plot.py
-```python3 scatter_plot.py```
 
-A program to display a scatter plot of marks distribution for each pair of subjects, and each Hogwarts house.
-The goal was to find the two most similars subjects.
-With ```-expl``` argument, explanations from the interactive scenario are displayed. 
 
-<p align='center'>
- <img width= '700' align='center' src='https://user-images.githubusercontent.com/67599180/194900436-d0afbc0f-bdd8-42e8-933c-7a5409bf481d.png' alt='animated'>
-</p>
-<p align='center'>
- <i align='center'>Project screen shot</i>
-</p>
-
-### 📐 pair_plot.py
-```python3 scatter_plot.py```
-
-A program to display a pair plot of marks distribution of all Hogwarts lessons subjects, for all Hogwarts house.
-The goal was to choose useful features to train our model on.
-With ```-expl``` argument, explanations from the interactive scenario are displayed. 
-
-<p align='center'>
- <img width= '700' align='center' src='https://user-images.githubusercontent.com/67599180/194900432-d42f949e-4c10-4aec-882e-ffd65df64e54.png' alt='animated'>
-</p>
-<p align='center'>
- <i align='center'>Project screen shot</i>
-</p>
-
-### 🏋 logreg_train.py
-```python3 logreg_train.py dataset_filepath```
-
-A program to train our One-vs-All model on a correct Hogwarts dataset (```dataset_train.csv```) taken as argument.
-The goal was to reach an accuracy of 98%.
-Obtained weights are saved into ```thetas.npz```.
-With ```-expl``` argument, explanations from the interactive scenario are displayed. 
-
-### 🔮 logreg_predict.py
-```python3 logreg_predict.py dataset_filepath```
-
-A program to attribute Hogwarts' students in one of the four houses.
-It takes a correct dataset as argument (```dataset_test.csv```), as well as a weights file (```thetas.npz```).
-Predictions are saved into ```houses.csv```.
-With ```-expl``` argument, explanations from the interactive scenario are displayed. 
-
-### 📈 logreg_finetune.py
-```python3 logreg_finetune.py```
-
-A bonus program, to help find good hyperparameters to use as default value inside ```logreg_train.py```.
-It trains the One-Vs-All model with randomly chosen hyperparameters and output the mean of ten differents training (with potential differents randomly initialized weights) with those hyperparameters.
-100 experiments are run on the same training and testing sets. Results and hyperparameters values of those experiments are registered in ```experiments.csv```.
-At the end of the program, median or mode of hyperparameters values helpful to reach best accuracy are displayed.
-
-## Logistic regression details
-A lot of available options make more sense for neural networks than linear regression. They can still help reaching faster optimal parameters, reduce overfitting, ... But their implementation was mainly to understand their logic.
-### Available optimizations
-- RMSprop (more neural network oriented)
-- Momentum (more neural network oriented)
-- Adam (more neural network oriented)
-- Learning rate decay
-- Mini-batch or stochastic gradient descent
-
-### Available regularizations
-- L2 regularization (ridge linear regression)
-- Early stopping
-
-## Available weights initializations
-- Zeros
-- Random small numbers (0-1)
-- He initialization
-
-### Available hyperparameters
-- Max iter = Number of epochs
-- Alpha = Learning rate
-- Beta 1 = Value for momentum / Adam (more neural network oriented)
-- Beta 2 = Value for RMSprop / Adam (more neural network oriented)
-- Lambda = Value for L2 regularization
-- Decay = Learning rate decay
-- Decay interval = Interval to perform learning rate decay
-- Epsilon = Small number to avoid computation problem in RMSprop / Adam
-- Batch size = Size of a batch  (1 = stochastic < mini-batch < max size = batch)
 
 
 ## Language used
@@ -224,8 +149,7 @@ Why ? Because it's the main language used in data science and machine learning n
 - NumPy (version: 1.21.5)
 - pandas (version 1.5.0)
 - matplotlib (version 3.5.1)
-- scikit-learn (version 1.1.2)
-- playsound (version 1.3.0)
 - argparse (version 1.1)
+- pickle (version 4.0)
 
-Note that seaborn could have been used for ```pair_plot.py``` but, as 42 restrict the quantity of memory per student, I choose to use solely matplotlib for visualization.
+Note that metrics results where compared with equivalent TensorFlow functions.
