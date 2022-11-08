@@ -126,22 +126,12 @@ Though only a set of those objects parameters are modified in the main program, 
 
 <p align='center'>
  <img width= '350' align='center' src='https://user-images.githubusercontent.com/67599180/194900103-66c28466-2930-44a4-94c8-d0f003784cdd.gif' alt='animated'>
-</p>
-
-<p align='center'>
- <i align='center'>Project screen capture of interactive mode</i>
-</p>
+</p>[Screencast from 11-08-2022 03:45:19 PM.webm](https://user-images.githubusercontent.com/67599180/200595286-36ea5c9d-93a6-4079-a772-38487d1ca209.webm)
 
 
 <p align='center'>
- <img width= '700' align='center' src='https://user-images.githubusercontent.com/67599180/194900426-d29fa66b-db50-44ab-8f6b-80a02d745a35.png' alt='animated'>
+ <i align='center'>Project screen cast example</i>
 </p>
-<p align='center'>
- <i align='center'>Project screen shot</i>
-</p>
-
-
-
 
 
 ## Language used
